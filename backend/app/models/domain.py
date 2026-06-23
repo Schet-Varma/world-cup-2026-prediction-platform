@@ -141,3 +141,72 @@ class LiveDataStatus(BaseModel):
     cache_ttl_minutes: int
     last_refresh: str
     notes: list[str]
+
+
+class ResearchSource(BaseModel):
+    title: str
+    source: str
+    url: str
+    category: str
+    summary: str
+
+
+class StrategyStep(BaseModel):
+    title: str
+    detail: str
+    status: str = "active"
+
+
+class BetLeg(BaseModel):
+    fixture_id: str
+    fixture_label: str
+    market: str
+    selection: str
+    decimal_odds: float
+    model_probability: float
+    market_probability: float
+    edge: float
+
+
+class FakeBetSlip(BaseModel):
+    id: str
+    kind: str
+    stake: float
+    decimal_odds: float
+    model_probability: float
+    market_probability: float
+    edge: float
+    expected_value: float
+    potential_return: float
+    potential_profit: float
+    status: str
+    placed_at: str
+    rationale: list[str]
+    legs: list[BetLeg]
+
+
+class BankrollPoint(BaseModel):
+    label: str
+    bankroll: float
+    available_cash: float
+    open_risk: float
+    potential_return: float
+    note: str
+
+
+class BankrollChallenge(BaseModel):
+    title: str
+    mode: str
+    initial_bankroll: float
+    target_bankroll: float
+    available_cash: float
+    open_risk: float
+    current_mark_to_model: float
+    max_possible_bankroll: float
+    probability_to_target: float
+    risk_warning: str
+    plan: list[StrategyStep]
+    research_sources: list[ResearchSource]
+    slips: list[FakeBetSlip]
+    bankroll_timeline: list[BankrollPoint]
+    news_context: list[NewsItem]

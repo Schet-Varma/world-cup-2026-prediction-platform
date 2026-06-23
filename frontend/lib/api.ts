@@ -1,4 +1,13 @@
-import type { BettingRecommendation, Fixture, LiveDataStatus, MatchPrediction, NewsItem, SimulationResult, Team } from "./types";
+import type {
+  BankrollChallenge,
+  BettingRecommendation,
+  Fixture,
+  LiveDataStatus,
+  MatchPrediction,
+  NewsItem,
+  SimulationResult,
+  Team
+} from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
@@ -92,6 +101,14 @@ export async function getLiveStatus(): Promise<LiveDataStatus> {
       last_refresh: new Date().toISOString(),
       notes: ["Running from local fallback data until API keys are configured."]
     };
+  }
+}
+
+export async function getBankrollChallenge(): Promise<BankrollChallenge> {
+  try {
+    return await getJson<BankrollChallenge>("/bankroll/challenge");
+  } catch {
+    return demoBankrollChallenge;
   }
 }
 
@@ -191,3 +208,64 @@ const demoNews: NewsItem[] = [
     summary: "Final group matches are flagged as high volatility because qualification incentives change team selection and game state."
   }
 ];
+
+const demoBankrollChallenge: BankrollChallenge = {
+  title: "Fake $100 to $1,000 Knockout-Day Challenge",
+  mode: "fake-money analytics lab",
+  initial_bankroll: 100,
+  target_bankroll: 1000,
+  available_cash: 22,
+  open_risk: 78,
+  current_mark_to_model: 141,
+  max_possible_bankroll: 1180,
+  probability_to_target: 0.08,
+  risk_warning: "No model can make sports betting risk-free. This page is fake money only.",
+  plan: [
+    { title: "Filter", detail: "Only fake-place positive expected value bets.", status: "active" },
+    { title: "Stake sizing", detail: "Use capped fractional Kelly and keep reserve cash.", status: "active" },
+    { title: "10x ladder", detail: "Use a tiny parlay sleeve for the $1,000 target.", status: "active" }
+  ],
+  research_sources: [
+    {
+      title: "The Odds API V4 documentation",
+      source: "The Odds API",
+      url: "https://the-odds-api.com/liveapi/guides/v4/",
+      category: "odds feed",
+      summary: "Provider docs for bookmaker odds and scores."
+    }
+  ],
+  slips: [
+    {
+      id: "demo-slip",
+      kind: "single",
+      stake: 16,
+      decimal_odds: 5.2,
+      model_probability: 0.29,
+      market_probability: 0.19,
+      edge: 0.1,
+      expected_value: 0.54,
+      potential_return: 83.2,
+      potential_profit: 67.2,
+      status: "fake-open",
+      placed_at: "knockout-day 10:00 local",
+      rationale: ["Fake slip generated from model edge and capped staking."],
+      legs: [
+        {
+          fixture_id: "r32-04",
+          fixture_label: "Brazil vs Ireland",
+          market: "h2h",
+          selection: "Ireland",
+          decimal_odds: 10.5,
+          model_probability: 0.16,
+          market_probability: 0.095,
+          edge: 0.065
+        }
+      ]
+    }
+  ],
+  bankroll_timeline: [
+    { label: "Start", bankroll: 100, available_cash: 100, open_risk: 0, potential_return: 0, note: "Fake bankroll initialized." },
+    { label: "Slips submitted", bankroll: 100, available_cash: 22, open_risk: 78, potential_return: 1180, note: "Fake slips locked." }
+  ],
+  news_context: demoNews
+};

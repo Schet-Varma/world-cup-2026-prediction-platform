@@ -2,8 +2,8 @@
   {
     "id": "news-2026-06-23-eng-ghana",
     "title": "England and Ghana enter pivotal Group L window",
-    "source": "seed-news",
-    "url": null,
+    "source": "SB Nation",
+    "url": "https://www.sbnation.com/soccer/1117513/world-cup-schedule-2026-how-to-watch-every-match-scores-and-more",
     "published_at": "2026-06-23T18:00:00Z",
     "team_ids": ["eng", "gha", "cro", "pan"],
     "impact": "high",
@@ -13,8 +13,8 @@
   {
     "id": "news-2026-06-23-arg-austria",
     "title": "Argentina form signal strengthens after Austria result",
-    "source": "seed-news",
-    "url": null,
+    "source": "FIFA",
+    "url": "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026",
     "published_at": "2026-06-23T15:30:00Z",
     "team_ids": ["arg", "aut"],
     "impact": "medium",
@@ -24,8 +24,8 @@
   {
     "id": "news-2026-06-23-portugal-drc",
     "title": "Portugal draw adds caution to favorite pricing",
-    "source": "seed-news",
-    "url": null,
+    "source": "New York Post",
+    "url": "https://nypost.com/2026/06/23/sports/world-cup-2026-standings-schedule-and-round-of-32-bracket/",
     "published_at": "2026-06-23T13:00:00Z",
     "team_ids": ["por"],
     "impact": "medium",
@@ -35,12 +35,23 @@
   {
     "id": "news-2026-06-23-jordan-algeria",
     "title": "Late comeback reinforces volatility in elimination-pressure matches",
-    "source": "seed-news",
-    "url": null,
+    "source": "FIFA",
+    "url": "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026",
     "published_at": "2026-06-23T08:00:00Z",
     "team_ids": [],
     "impact": "low",
     "sentiment": "neutral",
     "summary": "Comeback-heavy group fixtures increase model caution for live-betting assumptions and support keeping draw and totals uncertainty visible."
+  },
+  {
+    "id": "context-responsible-gambling",
+    "title": "Bankroll limits and no-chasing rules are part of the model context",
+    "source": "GambleAware",
+    "url": "https://www.gambleaware.org/advice/for-your-gambling/advice-to-consider-if-you-re-gambling/",
+    "published_at": "2026-06-23T00:00:00Z",
+    "team_ids": [],
+    "impact": "high",
+    "sentiment": "caution",
+    "summary": "The fake bankroll challenge uses spending limits, time limits, and no-chasing rules as hard constraints. This is simulated analytics, not real-money betting advice."
   }
 ]

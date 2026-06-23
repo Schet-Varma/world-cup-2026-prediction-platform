@@ -1,4 +1,5 @@
 import { Activity, ShieldAlert, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { BettingCard } from "@/components/BettingCard";
 import { LiveIntelPanel } from "@/components/LiveIntelPanel";
 import { PredictionTile } from "@/components/PredictionTile";
@@ -45,6 +46,19 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="rounded border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-pitch">Fake bankroll lab</p>
+            <h2 className="mt-1 text-2xl font-black">$100 to $1,000 Knockout-Day Challenge</h2>
+            <p className="mt-1 text-sm text-slate-600">A fake-money page now tracks bet slips, risk, model thinking, and linked news context.</p>
+          </div>
+          <Link href="/bets" className="inline-flex h-11 items-center justify-center rounded bg-pitch px-4 text-sm font-bold text-white hover:bg-emerald-800">
+            Open Fake Bets
+          </Link>
         </div>
       </section>
 

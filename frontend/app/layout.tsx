@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Activity, BarChart3, GitBranch, Trophy } from "lucide-react";
+import { Activity, BarChart3, CircleDollarSign, GitBranch, Trophy } from "lucide-react";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,6 +12,7 @@ const nav = [
   { href: "/", label: "Dashboard", icon: Trophy },
   { href: "/bracket", label: "Bracket", icon: GitBranch },
   { href: "/group-stage", label: "Groups", icon: BarChart3 },
+  { href: "/bets", label: "Fake Bets", icon: CircleDollarSign },
   { href: "/methodology", label: "Methodology", icon: Activity }
 ];
 

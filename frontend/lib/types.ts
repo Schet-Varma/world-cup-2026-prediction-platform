@@ -103,3 +103,72 @@ export type LiveDataStatus = {
   last_refresh: string;
   notes: string[];
 };
+
+export type ResearchSource = {
+  title: string;
+  source: string;
+  url: string;
+  category: string;
+  summary: string;
+};
+
+export type StrategyStep = {
+  title: string;
+  detail: string;
+  status: string;
+};
+
+export type BetLeg = {
+  fixture_id: string;
+  fixture_label: string;
+  market: string;
+  selection: string;
+  decimal_odds: number;
+  model_probability: number;
+  market_probability: number;
+  edge: number;
+};
+
+export type FakeBetSlip = {
+  id: string;
+  kind: string;
+  stake: number;
+  decimal_odds: number;
+  model_probability: number;
+  market_probability: number;
+  edge: number;
+  expected_value: number;
+  potential_return: number;
+  potential_profit: number;
+  status: string;
+  placed_at: string;
+  rationale: string[];
+  legs: BetLeg[];
+};
+
+export type BankrollPoint = {
+  label: string;
+  bankroll: number;
+  available_cash: number;
+  open_risk: number;
+  potential_return: number;
+  note: string;
+};
+
+export type BankrollChallenge = {
+  title: string;
+  mode: string;
+  initial_bankroll: number;
+  target_bankroll: number;
+  available_cash: number;
+  open_risk: number;
+  current_mark_to_model: number;
+  max_possible_bankroll: number;
+  probability_to_target: number;
+  risk_warning: string;
+  plan: StrategyStep[];
+  research_sources: ResearchSource[];
+  slips: FakeBetSlip[];
+  bankroll_timeline: BankrollPoint[];
+  news_context: NewsItem[];
+};

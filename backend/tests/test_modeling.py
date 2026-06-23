@@ -1,6 +1,7 @@
 from app.data.loaders import load_fixtures
 from app.services.elo import expected_score, recency_weight
 from app.services.odds import top_recommendations
+from app.services.bankroll import build_bankroll_challenge
 from app.services.poisson import score_matrix, summarize_score_matrix
 from app.services.prediction import predict_match
 from app.services.simulation import run_simulation
@@ -52,3 +53,12 @@ def test_betting_recommendations_find_model_edges():
     assert rows
     assert rows[0].expected_value > 0
     assert 0 <= rows[0].model_probability <= 1
+
+
+def test_bankroll_challenge_builds_fake_slips_and_timeline():
+    challenge = build_bankroll_challenge()
+    assert challenge.initial_bankroll == 100
+    assert challenge.target_bankroll == 1000
+    assert challenge.slips
+    assert challenge.bankroll_timeline
+    assert challenge.open_risk <= challenge.initial_bankroll

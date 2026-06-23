@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 
 from app.core.config import get_settings
 from app.data.loaders import load_all_fixtures, load_fixture_odds, load_fixtures, load_group_fixtures, load_teams
+from app.services.bankroll import build_bankroll_challenge
 from app.services.live_tracker import provider_status, refresh_local_caches
 from app.services.news import latest_news
 from app.services.odds import recommendations_for_fixture, top_recommendations
@@ -76,6 +77,11 @@ def odds() -> list:
 @router.get("/betting/recommendations")
 def betting_recommendations(stage: str | None = None, limit: int = 12) -> list:
     return top_recommendations(limit=limit, stage=stage)
+
+
+@router.get("/bankroll/challenge")
+def bankroll_challenge():
+    return build_bankroll_challenge()
 
 
 @router.get("/news")
