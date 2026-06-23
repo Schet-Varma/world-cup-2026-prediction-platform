@@ -59,6 +59,11 @@ def test_bankroll_challenge_builds_fake_slips_and_timeline():
     challenge = build_bankroll_challenge()
     assert challenge.initial_bankroll == 100
     assert challenge.target_bankroll == 1000
+    assert challenge.slate_size == 16
     assert challenge.slips
+    assert challenge.watchlist
     assert challenge.bankroll_timeline
-    assert challenge.open_risk <= challenge.initial_bankroll
+    assert challenge.open_risk <= 28
+    assert all(slip.model_probability >= 0.525 for slip in challenge.slips)
+    assert all(slip.stake > 0 for slip in challenge.slips)
+    assert all(slip.stake == 0 for slip in challenge.watchlist)

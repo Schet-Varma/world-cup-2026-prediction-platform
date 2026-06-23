@@ -210,16 +210,19 @@ const demoNews: NewsItem[] = [
 ];
 
 const demoBankrollChallenge: BankrollChallenge = {
-  title: "Fake $100 to $1,000 Knockout-Day Challenge",
-  mode: "fake-money analytics lab",
+  title: "Safe $100 Practice Bankroll",
+  mode: "fake-money safe growth lab",
+  strategy_name: "Safe Growth Mode",
   initial_bankroll: 100,
   target_bankroll: 1000,
-  available_cash: 22,
-  open_risk: 78,
-  current_mark_to_model: 141,
-  max_possible_bankroll: 1180,
-  probability_to_target: 0.08,
-  risk_warning: "No model can make sports betting risk-free. This page is fake money only.",
+  slate_size: 16,
+  available_cash: 78,
+  open_risk: 22,
+  current_mark_to_model: 104,
+  max_possible_bankroll: 132,
+  probability_to_target: 0,
+  target_assessment: "Safe mode will not pretend that 10x is likely from one slate. The target requires disciplined compounding.",
+  risk_warning: "Fake money only. Safe mode prioritizes survival and disciplined compounding.",
   plan: [
     { title: "Filter", detail: "Only fake-place positive expected value bets.", status: "active" },
     { title: "Stake sizing", detail: "Use capped fractional Kelly and keep reserve cash.", status: "active" },
@@ -263,6 +266,7 @@ const demoBankrollChallenge: BankrollChallenge = {
       ]
     }
   ],
+  watchlist: [],
   bankroll_timeline: [
     { label: "Start", bankroll: 100, available_cash: 100, open_risk: 0, potential_return: 0, note: "Fake bankroll initialized." },
     { label: "Slips submitted", bankroll: 100, available_cash: 22, open_risk: 78, potential_return: 1180, note: "Fake slips locked." }

@@ -5,6 +5,7 @@ import { getBankrollChallenge } from "@/lib/api";
 
 export default async function BetsPage() {
   const challenge = await getBankrollChallenge();
+  const watchlist = challenge.watchlist ?? [];
 
   return (
     <div className="space-y-8">
@@ -13,11 +14,12 @@ export default async function BetsPage() {
           <p className="text-sm font-semibold uppercase tracking-wide text-pitch">{challenge.mode}</p>
           <h1 className="mt-2 text-3xl font-black">{challenge.title}</h1>
           <p className="mt-3 max-w-3xl text-slate-600">{challenge.risk_warning}</p>
+          <p className="mt-3 max-w-3xl border-l-4 border-coral bg-slate-50 p-3 text-sm text-slate-700">{challenge.target_assessment}</p>
           <div className="mt-6 grid gap-4 sm:grid-cols-4">
             <Metric label="Start" value={`$${challenge.initial_bankroll.toFixed(0)}`} />
             <Metric label="Target" value={`$${challenge.target_bankroll.toFixed(0)}`} />
             <Metric label="Open risk" value={`$${challenge.open_risk.toFixed(0)}`} />
-            <Metric label="Max route" value={`$${challenge.max_possible_bankroll.toFixed(0)}`} />
+            <Metric label="Slate" value={`${challenge.slate_size} games`} />
           </div>
         </div>
         <div className="rounded border border-slate-200 bg-ink p-6 text-white shadow-panel">
@@ -51,9 +53,21 @@ export default async function BetsPage() {
       <section>
         <div className="mb-4">
           <h2 className="text-2xl font-black">Money Tracker</h2>
-          <p className="mt-1 text-sm text-slate-600">Track cash, open risk, model EV mark, and the aggressive target route separately.</p>
+          <p className="mt-1 text-sm text-slate-600">Track cash, open risk, model EV mark, and the stretch target separately.</p>
         </div>
         <BankrollTimeline points={challenge.bankroll_timeline} />
+      </section>
+
+      <section>
+        <div className="mb-4">
+          <h2 className="text-2xl font-black">Rejected Edges</h2>
+          <p className="mt-1 text-sm text-slate-600">Tempting bets that were not placed because the hit rate, odds band, or variance profile failed Safe Growth Mode.</p>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          {watchlist.map((slip) => (
+            <FakeBetSlipCard key={slip.id} slip={slip} />
+          ))}
+        </div>
       </section>
 
       <section>

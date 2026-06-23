@@ -158,17 +158,21 @@ export type BankrollPoint = {
 export type BankrollChallenge = {
   title: string;
   mode: string;
+  strategy_name: string;
   initial_bankroll: number;
   target_bankroll: number;
+  slate_size: number;
   available_cash: number;
   open_risk: number;
   current_mark_to_model: number;
   max_possible_bankroll: number;
   probability_to_target: number;
+  target_assessment: string;
   risk_warning: string;
   plan: StrategyStep[];
   research_sources: ResearchSource[];
   slips: FakeBetSlip[];
+  watchlist: FakeBetSlip[];
   bankroll_timeline: BankrollPoint[];
   news_context: NewsItem[];
 };

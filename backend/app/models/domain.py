@@ -197,16 +197,20 @@ class BankrollPoint(BaseModel):
 class BankrollChallenge(BaseModel):
     title: str
     mode: str
+    strategy_name: str
     initial_bankroll: float
     target_bankroll: float
+    slate_size: int
     available_cash: float
     open_risk: float
     current_mark_to_model: float
     max_possible_bankroll: float
     probability_to_target: float
+    target_assessment: str
     risk_warning: str
     plan: list[StrategyStep]
     research_sources: list[ResearchSource]
     slips: list[FakeBetSlip]
+    watchlist: list[FakeBetSlip]
     bankroll_timeline: list[BankrollPoint]
     news_context: list[NewsItem]
