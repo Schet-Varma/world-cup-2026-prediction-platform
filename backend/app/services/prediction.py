@@ -47,6 +47,9 @@ def predict_match(fixture: Fixture) -> MatchPrediction:
     most_likely = top_scorelines[0]
     favorite_is_home = teams[fixture.home_team].elo >= teams[fixture.away_team].elo
     upset_probability = summary["away_win"] if favorite_is_home else summary["home_win"]
+    probability_margin = abs(summary["home_win"] - summary["away_win"])
+    data_depth_bonus = min(len(load_historical_matches()) / 80, 0.22)
+    confidence_score = min(0.92, 0.48 + probability_margin * 0.42 + data_depth_bonus)
 
     return MatchPrediction(
         fixture=fixture,
@@ -60,5 +63,11 @@ def predict_match(fixture: Fixture) -> MatchPrediction:
         draw_probability=summary["draw"],
         away_win_probability=summary["away_win"],
         upset_probability=upset_probability,
+        over_2_5_probability=summary["over_2_5"],
+        under_2_5_probability=summary["under_2_5"],
+        both_teams_to_score_probability=summary["both_teams_to_score"],
+        home_clean_sheet_probability=summary["home_clean_sheet"],
+        away_clean_sheet_probability=summary["away_clean_sheet"],
+        confidence_score=confidence_score,
         explanation=explanation,
     )

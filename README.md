@@ -52,6 +52,20 @@ Set `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000` for local development.
 - `POST /simulate`
 - `POST /refresh-data`
 - `GET /model-explanation`
+- `GET /predictions/group`
+- `GET /betting/recommendations`
+- `GET /news`
+- `GET /live/status`
+
+## Live Data And Betting Intelligence
+
+The app can run entirely from seed data, then switch to live providers when keys are configured:
+
+- Fixtures/results: `FOOTBALL_DATA_API_KEY` or `API_FOOTBALL_KEY`
+- Odds: `ODDS_API_KEY`
+- News: `NEWS_API_KEY`
+
+Betting cards are probability/edge analytics, not guarantees. Always verify current odds and local rules before placing any wager.
 
 ## Current Status
 

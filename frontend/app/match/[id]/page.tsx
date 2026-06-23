@@ -47,6 +47,12 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
         </div>
       </section>
 
+      <section className="grid gap-6 lg:grid-cols-3">
+        <Metric icon={<Gauge />} label="Over 2.5 goals" value={`${(prediction.over_2_5_probability * 100).toFixed(1)}%`} />
+        <Metric icon={<Goal />} label="Both teams score" value={`${(prediction.both_teams_to_score_probability * 100).toFixed(1)}%`} />
+        <Metric icon={<ShieldQuestion />} label={`${prediction.home_team.name} clean sheet`} value={`${(prediction.home_clean_sheet_probability * 100).toFixed(1)}%`} />
+      </section>
+
       <section className="rounded border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-xl font-bold">Explanation</h2>
         <div className="grid gap-3 md:grid-cols-2">

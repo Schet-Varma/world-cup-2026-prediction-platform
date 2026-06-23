@@ -25,4 +25,17 @@ def summarize_score_matrix(matrix: list[dict]) -> dict[str, float]:
     home_win = sum(row["probability"] for row in matrix if row["home_goals"] > row["away_goals"])
     draw = sum(row["probability"] for row in matrix if row["home_goals"] == row["away_goals"])
     away_win = sum(row["probability"] for row in matrix if row["home_goals"] < row["away_goals"])
-    return {"home_win": home_win, "draw": draw, "away_win": away_win}
+    over_2_5 = sum(row["probability"] for row in matrix if row["home_goals"] + row["away_goals"] > 2.5)
+    btts = sum(row["probability"] for row in matrix if row["home_goals"] > 0 and row["away_goals"] > 0)
+    home_clean_sheet = sum(row["probability"] for row in matrix if row["away_goals"] == 0)
+    away_clean_sheet = sum(row["probability"] for row in matrix if row["home_goals"] == 0)
+    return {
+        "home_win": home_win,
+        "draw": draw,
+        "away_win": away_win,
+        "over_2_5": over_2_5,
+        "under_2_5": 1 - over_2_5,
+        "both_teams_to_score": btts,
+        "home_clean_sheet": home_clean_sheet,
+        "away_clean_sheet": away_clean_sheet,
+    }

@@ -1,5 +1,6 @@
 from app.data.loaders import load_fixtures
 from app.services.elo import expected_score, recency_weight
+from app.services.odds import top_recommendations
 from app.services.poisson import score_matrix, summarize_score_matrix
 from app.services.prediction import predict_match
 from app.services.simulation import run_simulation
@@ -24,7 +25,11 @@ def test_score_matrix_normalizes_probabilities():
     total = sum(row["probability"] for row in matrix)
     assert abs(total - 1) < 0.000001
     summary = summarize_score_matrix(matrix)
-    assert abs(sum(summary.values()) - 1) < 0.000001
+    result_total = summary["home_win"] + summary["draw"] + summary["away_win"]
+    totals_total = summary["over_2_5"] + summary["under_2_5"]
+    assert abs(result_total - 1) < 0.000001
+    assert abs(totals_total - 1) < 0.000001
+    assert 0 <= summary["both_teams_to_score"] <= 1
 
 
 def test_prediction_has_top_scorelines():
@@ -38,5 +43,12 @@ def test_prediction_has_top_scorelines():
 def test_simulation_returns_all_seed_teams():
     result = run_simulation(runs=100, seed=7)
     assert result.runs == 100
-    assert len(result.teams) == 32
+    assert len(result.teams) >= 32
     assert result.teams[0].champion_probability >= result.teams[-1].champion_probability
+
+
+def test_betting_recommendations_find_model_edges():
+    rows = top_recommendations(limit=5)
+    assert rows
+    assert rows[0].expected_value > 0
+    assert 0 <= rows[0].model_probability <= 1

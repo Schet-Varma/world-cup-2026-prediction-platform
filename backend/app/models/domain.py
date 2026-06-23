@@ -31,6 +31,11 @@ class Fixture(BaseModel):
     venue: str
     kickoff_local: str
     neutral: bool = True
+    stage: str = "knockout"
+    group: str | None = None
+    status: str = "scheduled"
+    home_goals: int | None = None
+    away_goals: int | None = None
 
 
 class ScorelineProbability(BaseModel):
@@ -51,6 +56,12 @@ class MatchPrediction(BaseModel):
     draw_probability: float
     away_win_probability: float
     upset_probability: float
+    over_2_5_probability: float
+    under_2_5_probability: float
+    both_teams_to_score_probability: float
+    home_clean_sheet_probability: float
+    away_clean_sheet_probability: float
+    confidence_score: float
     explanation: list[str]
 
 
@@ -67,3 +78,66 @@ class TeamSimulationResult(BaseModel):
 class SimulationResult(BaseModel):
     runs: int
     teams: list[TeamSimulationResult]
+
+
+class OddsOutcome(BaseModel):
+    name: str
+    price: float
+    implied_probability: float
+
+
+class OddsMarket(BaseModel):
+    key: str
+    outcomes: list[OddsOutcome]
+
+
+class BookmakerOdds(BaseModel):
+    key: str
+    title: str
+    last_update: str
+    markets: list[OddsMarket]
+
+
+class FixtureOdds(BaseModel):
+    fixture_id: str
+    source: str
+    last_update: str
+    bookmakers: list[BookmakerOdds]
+
+
+class BettingRecommendation(BaseModel):
+    fixture_id: str
+    fixture_label: str
+    market: str
+    selection: str
+    model_probability: float
+    market_probability: float
+    best_decimal_odds: float
+    edge: float
+    expected_value: float
+    confidence: float
+    risk_label: str
+    rationale: list[str]
+
+
+class NewsItem(BaseModel):
+    id: str
+    title: str
+    source: str
+    url: str | None = None
+    published_at: str
+    team_ids: list[str] = []
+    impact: str = "medium"
+    sentiment: str = "neutral"
+    summary: str
+
+
+class LiveDataStatus(BaseModel):
+    results_provider: str
+    odds_provider: str
+    news_provider: str
+    configured_providers: list[str]
+    fallback_mode: bool
+    cache_ttl_minutes: int
+    last_refresh: str
+    notes: list[str]

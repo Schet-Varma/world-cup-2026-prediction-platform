@@ -30,5 +30,13 @@
   {"id":"irl","name":"Ireland","confederation":"UEFA","elo":1688,"attack":0.91,"defense":1.07,"fifa_rank":29,"climate_profile":"temperate"},
   {"id":"qat","name":"Qatar","confederation":"AFC","elo":1664,"attack":0.9,"defense":1.08,"fifa_rank":30,"climate_profile":"hot"},
   {"id":"rsa","name":"South Africa","confederation":"CAF","elo":1658,"attack":0.9,"defense":1.09,"fifa_rank":31,"climate_profile":"warm"},
-  {"id":"jam","name":"Jamaica","confederation":"CONCACAF","elo":1646,"attack":0.9,"defense":1.1,"fifa_rank":32,"climate_profile":"tropical"}
+  {"id":"jam","name":"Jamaica","confederation":"CONCACAF","elo":1646,"attack":0.9,"defense":1.1,"fifa_rank":32,"climate_profile":"tropical"},
+  {"id":"cze","name":"Czechia","confederation":"UEFA","elo":1702,"attack":0.94,"defense":1.05,"fifa_rank":33,"climate_profile":"temperate"},
+  {"id":"bih","name":"Bosnia and Herzegovina","confederation":"UEFA","elo":1618,"attack":0.89,"defense":1.12,"fifa_rank":34,"climate_profile":"temperate"},
+  {"id":"hai","name":"Haiti","confederation":"CONCACAF","elo":1542,"attack":0.84,"defense":1.18,"fifa_rank":35,"climate_profile":"tropical"},
+  {"id":"sco","name":"Scotland","confederation":"UEFA","elo":1740,"attack":0.95,"defense":1.04,"fifa_rank":36,"climate_profile":"temperate"},
+  {"id":"gha","name":"Ghana","confederation":"CAF","elo":1726,"attack":0.96,"defense":1.06,"fifa_rank":37,"climate_profile":"hot"},
+  {"id":"pan","name":"Panama","confederation":"CONCACAF","elo":1628,"attack":0.88,"defense":1.12,"fifa_rank":38,"climate_profile":"tropical"},
+  {"id":"swe","name":"Sweden","confederation":"UEFA","elo":1748,"attack":0.96,"defense":1.03,"fifa_rank":39,"climate_profile":"cold"},
+  {"id":"tun","name":"Tunisia","confederation":"CAF","elo":1698,"attack":0.92,"defense":1.04,"fifa_rank":40,"climate_profile":"hot"}
 ]

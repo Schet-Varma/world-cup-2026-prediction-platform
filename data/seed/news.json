@@ -1,0 +1,46 @@
+[
+  {
+    "id": "news-2026-06-23-eng-ghana",
+    "title": "England and Ghana enter pivotal Group L window",
+    "source": "seed-news",
+    "url": null,
+    "published_at": "2026-06-23T18:00:00Z",
+    "team_ids": ["eng", "gha", "cro", "pan"],
+    "impact": "high",
+    "sentiment": "neutral",
+    "summary": "Group L scenarios keep England, Ghana, Croatia, and Panama live for multiple Round of 32 paths. The model flags team news and final-match motivation as high-impact inputs."
+  },
+  {
+    "id": "news-2026-06-23-arg-austria",
+    "title": "Argentina form signal strengthens after Austria result",
+    "source": "seed-news",
+    "url": null,
+    "published_at": "2026-06-23T15:30:00Z",
+    "team_ids": ["arg", "aut"],
+    "impact": "medium",
+    "sentiment": "positive",
+    "summary": "Argentina's tournament form remains a positive model input, increasing confidence in short-price projections while reducing value at common market prices."
+  },
+  {
+    "id": "news-2026-06-23-portugal-drc",
+    "title": "Portugal draw adds caution to favorite pricing",
+    "source": "seed-news",
+    "url": null,
+    "published_at": "2026-06-23T13:00:00Z",
+    "team_ids": ["por"],
+    "impact": "medium",
+    "sentiment": "negative",
+    "summary": "A favorite failing to convert dominance into margin is treated as a caution flag for spread-style markets, not a full downgrade to baseline strength."
+  },
+  {
+    "id": "news-2026-06-23-jordan-algeria",
+    "title": "Late comeback reinforces volatility in elimination-pressure matches",
+    "source": "seed-news",
+    "url": null,
+    "published_at": "2026-06-23T08:00:00Z",
+    "team_ids": [],
+    "impact": "low",
+    "sentiment": "neutral",
+    "summary": "Comeback-heavy group fixtures increase model caution for live-betting assumptions and support keeping draw and totals uncertainty visible."
+  }
+]

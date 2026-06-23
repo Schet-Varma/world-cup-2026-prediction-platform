@@ -40,6 +40,8 @@ flowchart LR
   Features --> Goals["Poisson goal model"]
   Elo --> Prediction["Match prediction service"]
   Goals --> Prediction
+  External --> Odds["Odds and news adapters"]
+  Odds --> Prediction
   Prediction --> Simulation["Monte Carlo simulation"]
   Simulation --> API["FastAPI backend"]
   Prediction --> API
@@ -68,6 +70,8 @@ Frontend modules:
 4. The score matrix evaluates 0-0 through 6-6 using independent Poisson distributions.
 5. Match winners are sampled from score probabilities. Draws in knockout matches are resolved by a penalty-weighted team strength tiebreak.
 6. Tournament simulations repeat bracket resolution and aggregate round and champion rates.
+7. Betting-edge analytics compare model probabilities to bookmaker implied probabilities and label uncertainty.
+8. News tracking attaches injury, squad, form, and motivation context as explainability signals.
 
 This is intentionally transparent. The platform can improve by calibrating coefficients against historical tournaments, but the MVP avoids opaque black-box predictions.
 
@@ -96,3 +100,4 @@ This is intentionally transparent. The platform can improve by calibrating coeff
 - Injury and squad value feeds are usually paid or licensing-sensitive.
 - A Poisson model assumes independent scoring processes; this is explainable but imperfect for tactical match states.
 - A 100,000-run simulation can be expensive for synchronous requests. The API supports configurable runs so production can move heavy jobs to a worker.
+- Betting recommendations must be presented as model signals only. Production should add jurisdiction-aware compliance copy, live odds timestamps, and responsible gambling controls.

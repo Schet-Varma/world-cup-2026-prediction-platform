@@ -1,4 +1,4 @@
-import type { Fixture, MatchPrediction, SimulationResult, Team } from "./types";
+import type { BettingRecommendation, Fixture, LiveDataStatus, MatchPrediction, NewsItem, SimulationResult, Team } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
@@ -23,6 +23,14 @@ export async function getFixtures(): Promise<Fixture[]> {
     return await getJson<Fixture[]>("/fixtures");
   } catch {
     return demoFixtures;
+  }
+}
+
+export async function getGroupPredictions(): Promise<MatchPrediction[]> {
+  try {
+    return await getJson<MatchPrediction[]>("/predictions/group");
+  } catch {
+    return [demoPrediction, demoGroupPrediction];
   }
 }
 
@@ -53,6 +61,40 @@ export async function getPrediction(id: string): Promise<MatchPrediction> {
   }
 }
 
+export async function getBettingRecommendations(stage?: string): Promise<BettingRecommendation[]> {
+  const query = stage ? `?stage=${stage}&limit=10` : "?limit=10";
+  try {
+    return await getJson<BettingRecommendation[]>(`/betting/recommendations${query}`);
+  } catch {
+    return demoRecommendations;
+  }
+}
+
+export async function getNews(): Promise<NewsItem[]> {
+  try {
+    return await getJson<NewsItem[]>("/news?limit=6");
+  } catch {
+    return demoNews;
+  }
+}
+
+export async function getLiveStatus(): Promise<LiveDataStatus> {
+  try {
+    return await getJson<LiveDataStatus>("/live/status");
+  } catch {
+    return {
+      results_provider: "seed results",
+      odds_provider: "seed odds",
+      news_provider: "seed news",
+      configured_providers: [],
+      fallback_mode: true,
+      cache_ttl_minutes: 30,
+      last_refresh: new Date().toISOString(),
+      notes: ["Running from local fallback data until API keys are configured."]
+    };
+  }
+}
+
 const demoTeams: Team[] = [
   { id: "arg", name: "Argentina", confederation: "CONMEBOL", elo: 2142, attack: 1.19, defense: 0.86, fifa_rank: 1, climate_profile: "warm" },
   { id: "fra", name: "France", confederation: "UEFA", elo: 2098, attack: 1.18, defense: 0.88, fifa_rank: 2, climate_profile: "temperate" },
@@ -65,10 +107,10 @@ const demoTeams: Team[] = [
 ];
 
 const demoFixtures: Fixture[] = [
-  { id: "r32-01", round: "Round of 32", home_team: "arg", away_team: "jam", venue: "MetLife Stadium", kickoff_local: "2026-07-04T15:00:00-04:00", neutral: true },
-  { id: "r32-02", round: "Round of 32", home_team: "fra", away_team: "rsa", venue: "AT&T Stadium", kickoff_local: "2026-07-04T18:00:00-05:00", neutral: true },
-  { id: "r32-03", round: "Round of 32", home_team: "esp", away_team: "qat", venue: "SoFi Stadium", kickoff_local: "2026-07-05T15:00:00-07:00", neutral: true },
-  { id: "r32-04", round: "Round of 32", home_team: "bra", away_team: "irl", venue: "Hard Rock Stadium", kickoff_local: "2026-07-05T20:00:00-04:00", neutral: true }
+  { id: "r32-01", round: "Round of 32", home_team: "arg", away_team: "jam", venue: "MetLife Stadium", kickoff_local: "2026-07-04T15:00:00-04:00", neutral: true, stage: "knockout", status: "scheduled" },
+  { id: "r32-02", round: "Round of 32", home_team: "fra", away_team: "rsa", venue: "AT&T Stadium", kickoff_local: "2026-07-04T18:00:00-05:00", neutral: true, stage: "knockout", status: "scheduled" },
+  { id: "grp-c-05", round: "Group C Matchday 3", home_team: "sco", away_team: "bra", venue: "Hard Rock Stadium", kickoff_local: "2026-06-24T21:00:00-04:00", neutral: true, stage: "group", group: "C", status: "scheduled" },
+  { id: "grp-l-05", round: "Group L Matchday 3", home_team: "pan", away_team: "eng", venue: "MetLife Stadium", kickoff_local: "2026-06-27T17:00:00-04:00", neutral: true, stage: "group", group: "L", status: "scheduled" }
 ];
 
 const demoPrediction: MatchPrediction = {
@@ -89,9 +131,63 @@ const demoPrediction: MatchPrediction = {
   draw_probability: 0.19,
   away_win_probability: 0.12,
   upset_probability: 0.12,
+  over_2_5_probability: 0.48,
+  under_2_5_probability: 0.52,
+  both_teams_to_score_probability: 0.34,
+  home_clean_sheet_probability: 0.51,
+  away_clean_sheet_probability: 0.16,
+  confidence_score: 0.72,
   explanation: [
     "Argentina carries a large Elo edge and stronger recent tournament performance.",
     "Expected goals combine attack, defense, Elo difference, and form.",
     "Neutral venue assumptions are used until live fixture metadata is available."
   ]
 };
+
+const demoGroupPrediction: MatchPrediction = {
+  ...demoPrediction,
+  fixture: demoFixtures[2],
+  home_team: { id: "sco", name: "Scotland", confederation: "UEFA", elo: 1740, attack: 0.95, defense: 1.04, fifa_rank: 36, climate_profile: "temperate" },
+  away_team: demoTeams[3],
+  expected_home_goals: 0.92,
+  expected_away_goals: 1.62,
+  most_likely_score: "0-1",
+  home_win_probability: 0.19,
+  draw_probability: 0.25,
+  away_win_probability: 0.56,
+  upset_probability: 0.19,
+  over_2_5_probability: 0.45,
+  under_2_5_probability: 0.55,
+  both_teams_to_score_probability: 0.46,
+  confidence_score: 0.67
+};
+
+const demoRecommendations: BettingRecommendation[] = [
+  {
+    fixture_id: "grp-c-05",
+    fixture_label: "Scotland vs Brazil",
+    market: "btts",
+    selection: "No",
+    model_probability: 0.54,
+    market_probability: 0.48,
+    best_decimal_odds: 2.08,
+    edge: 0.06,
+    expected_value: 0.12,
+    confidence: 0.67,
+    risk_label: "watchlist edge",
+    rationale: ["Brazil projection is strong, but Scotland chance creation remains modest.", "This is an analytics signal and should be verified against live odds."]
+  }
+];
+
+const demoNews: NewsItem[] = [
+  {
+    id: "demo-news",
+    title: "Group-stage motivation is now a model input",
+    source: "seed-news",
+    published_at: "2026-06-24T00:00:00Z",
+    team_ids: ["eng", "gha", "cro", "pan"],
+    impact: "high",
+    sentiment: "neutral",
+    summary: "Final group matches are flagged as high volatility because qualification incentives change team selection and game state."
+  }
+];

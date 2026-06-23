@@ -9,6 +9,8 @@
 | Sportmonks | Broad football and squad data | Strong commercial coverage, player and injury endpoints | Paid product; needs careful cost review. |
 | Opta/Stats Perform | Enterprise football data | Best-in-class data quality | Expensive and procurement-heavy. |
 | Open-Meteo | Weather | Free, no key for many endpoints | Weather is contextual, not a primary predictor. |
+| The Odds API | Bookmaker odds, scores, markets | Soccer odds, regions, h2h/totals markets, quota headers | Requires key; odds movement and availability vary by sport/region. |
+| NewsAPI | News search | Simple article monitoring for injuries, squads, and match context | Requires key; not a structured injury feed. |
 
 ## MVP Decision
 
@@ -23,5 +25,7 @@ Provider adapters should implement:
 - `fetch_results(team_ids, from_date, to_date)`
 - `fetch_injuries(team_ids)` when licensed data exists
 - `fetch_weather(stadium_id, kickoff_time)` for climate adjustments
+- `fetch_odds(sport_key, markets, regions)` for bookmaker markets
+- `fetch_news(query, teams)` for squad, injury, and tactical news signals
 
 All adapters must write raw payloads to `data/cache` before normalization.

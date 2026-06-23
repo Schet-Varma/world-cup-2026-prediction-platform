@@ -1,9 +1,18 @@
 import { Activity, ShieldAlert, Sparkles } from "lucide-react";
+import { BettingCard } from "@/components/BettingCard";
+import { LiveIntelPanel } from "@/components/LiveIntelPanel";
+import { PredictionTile } from "@/components/PredictionTile";
 import { TeamCard } from "@/components/TeamCard";
-import { getSimulation } from "@/lib/api";
+import { getBettingRecommendations, getGroupPredictions, getLiveStatus, getNews, getSimulation } from "@/lib/api";
 
 export default async function HomePage() {
-  const simulation = await getSimulation();
+  const [simulation, picks, groupPredictions, liveStatus, news] = await Promise.all([
+    getSimulation(),
+    getBettingRecommendations(),
+    getGroupPredictions(),
+    getLiveStatus(),
+    getNews()
+  ]);
   const topTeams = simulation.teams.slice(0, 6);
   const darkHorses = simulation.teams.filter((team) => team.champion_probability >= 0.03).slice(3, 6);
 
@@ -36,6 +45,35 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <LiveIntelPanel status={liveStatus} news={news} />
+
+      <section>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-2xl font-black">Top Value Watchlist</h2>
+            <p className="mt-1 text-sm text-slate-600">Model edge candidates compare projected probability to seed or live bookmaker implied probability.</p>
+          </div>
+          <span className="rounded bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-coral">analytics only</span>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {picks.slice(0, 6).map((pick) => (
+            <BettingCard key={`${pick.fixture_id}-${pick.market}-${pick.selection}`} pick={pick} />
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-4">
+          <h2 className="text-2xl font-black">Group Stage Prediction Lab</h2>
+          <p className="mt-1 text-sm text-slate-600">Use remaining group-stage matches as a live testing block before final knockout fixtures are locked.</p>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          {groupPredictions.slice(0, 4).map((prediction) => (
+            <PredictionTile key={prediction.fixture.id} prediction={prediction} />
+          ))}
         </div>
       </section>
 

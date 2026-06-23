@@ -2,7 +2,9 @@ const steps = [
   ["Dynamic Elo", "Ratings update from historical matches with competition weights and exponential recency decay."],
   ["Expected goals", "Attack, defense, Elo difference, and recent form create team-level xG estimates."],
   ["Poisson matrix", "The model evaluates normalized 0-0 through 6-6 scoreline probabilities."],
-  ["Simulation", "Monte Carlo tournament paths aggregate champion and round advancement probabilities."]
+  ["Simulation", "Monte Carlo tournament paths aggregate champion and round advancement probabilities."],
+  ["Odds edge", "Model probabilities are compared with bookmaker implied probabilities to surface value candidates."],
+  ["Live intel", "Results, odds, and news providers refresh cached inputs, while seed fallbacks keep the app usable."]
 ];
 
 export default function MethodologyPage() {
