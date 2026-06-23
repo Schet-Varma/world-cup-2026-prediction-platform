@@ -1,0 +1,42 @@
+from app.data.loaders import load_fixtures
+from app.services.elo import expected_score, recency_weight
+from app.services.poisson import score_matrix, summarize_score_matrix
+from app.services.prediction import predict_match
+from app.services.simulation import run_simulation
+
+
+def test_expected_score_is_symmetric():
+    a = expected_score(1800, 1700)
+    b = expected_score(1700, 1800)
+    assert round(a + b, 8) == 1
+
+
+def test_recency_weight_prefers_recent_matches():
+    from datetime import date
+
+    recent = recency_weight(date(2025, 1, 1))
+    older = recency_weight(date(2020, 1, 1))
+    assert recent > older
+
+
+def test_score_matrix_normalizes_probabilities():
+    matrix = score_matrix(1.4, 1.1)
+    total = sum(row["probability"] for row in matrix)
+    assert abs(total - 1) < 0.000001
+    summary = summarize_score_matrix(matrix)
+    assert abs(sum(summary.values()) - 1) < 0.000001
+
+
+def test_prediction_has_top_scorelines():
+    prediction = predict_match(load_fixtures()[0])
+    assert prediction.most_likely_score
+    assert len(prediction.top_scorelines) == 5
+    total = prediction.home_win_probability + prediction.draw_probability + prediction.away_win_probability
+    assert abs(total - 1) < 0.000001
+
+
+def test_simulation_returns_all_seed_teams():
+    result = run_simulation(runs=100, seed=7)
+    assert result.runs == 100
+    assert len(result.teams) == 32
+    assert result.teams[0].champion_probability >= result.teams[-1].champion_probability

@@ -1,0 +1,18 @@
+[
+  {"id":"r32-01","round":"Round of 32","home_team":"arg","away_team":"jam","venue":"MetLife Stadium","kickoff_local":"2026-07-04T15:00:00-04:00","neutral":true},
+  {"id":"r32-02","round":"Round of 32","home_team":"fra","away_team":"rsa","venue":"AT&T Stadium","kickoff_local":"2026-07-04T18:00:00-05:00","neutral":true},
+  {"id":"r32-03","round":"Round of 32","home_team":"esp","away_team":"qat","venue":"SoFi Stadium","kickoff_local":"2026-07-05T15:00:00-07:00","neutral":true},
+  {"id":"r32-04","round":"Round of 32","home_team":"bra","away_team":"irl","venue":"Hard Rock Stadium","kickoff_local":"2026-07-05T20:00:00-04:00","neutral":true},
+  {"id":"r32-05","round":"Round of 32","home_team":"eng","away_team":"nga","venue":"Mercedes-Benz Stadium","kickoff_local":"2026-07-06T15:00:00-04:00","neutral":true},
+  {"id":"r32-06","round":"Round of 32","home_team":"ned","away_team":"ser","venue":"NRG Stadium","kickoff_local":"2026-07-06T18:00:00-05:00","neutral":true},
+  {"id":"r32-07","round":"Round of 32","home_team":"por","away_team":"pol","venue":"BC Place","kickoff_local":"2026-07-07T15:00:00-07:00","neutral":true},
+  {"id":"r32-08","round":"Round of 32","home_team":"ger","away_team":"can","venue":"BMO Field","kickoff_local":"2026-07-07T20:00:00-04:00","neutral":true},
+  {"id":"r32-09","round":"Round of 32","home_team":"bel","away_team":"aus","venue":"Levi's Stadium","kickoff_local":"2026-07-08T15:00:00-07:00","neutral":true},
+  {"id":"r32-10","round":"Round of 32","home_team":"ita","away_team":"aut","venue":"Lumen Field","kickoff_local":"2026-07-08T18:00:00-07:00","neutral":true},
+  {"id":"r32-11","round":"Round of 32","home_team":"uru","away_team":"ecu","venue":"Arrowhead Stadium","kickoff_local":"2026-07-09T15:00:00-05:00","neutral":true},
+  {"id":"r32-12","round":"Round of 32","home_team":"cro","away_team":"kor","venue":"Gillette Stadium","kickoff_local":"2026-07-09T20:00:00-04:00","neutral":true},
+  {"id":"r32-13","round":"Round of 32","home_team":"col","away_team":"sen","venue":"Lincoln Financial Field","kickoff_local":"2026-07-10T15:00:00-04:00","neutral":true},
+  {"id":"r32-14","round":"Round of 32","home_team":"usa","away_team":"den","venue":"Rose Bowl","kickoff_local":"2026-07-10T18:00:00-07:00","neutral":true},
+  {"id":"r32-15","round":"Round of 32","home_team":"mex","away_team":"sui","venue":"Estadio Azteca","kickoff_local":"2026-07-11T15:00:00-06:00","neutral":true},
+  {"id":"r32-16","round":"Round of 32","home_team":"mar","away_team":"jpn","venue":"Monterrey Stadium","kickoff_local":"2026-07-11T20:00:00-06:00","neutral":true}
+]
