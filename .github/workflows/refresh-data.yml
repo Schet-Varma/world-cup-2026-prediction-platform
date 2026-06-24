@@ -8,13 +8,25 @@ on:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    if: ${{ secrets.PUBLIC_BACKEND_URL != '' }}
+    env:
+      PUBLIC_BACKEND_URL: ${{ secrets.PUBLIC_BACKEND_URL }}
     steps:
+      - name: Skip when backend URL is not configured
+        if: ${{ env.PUBLIC_BACKEND_URL == '' }}
+        run: echo "PUBLIC_BACKEND_URL is not configured; skipping live data refresh."
+
       - uses: actions/checkout@v4
+        if: ${{ env.PUBLIC_BACKEND_URL != '' }}
+
       - uses: actions/setup-python@v5
+        if: ${{ env.PUBLIC_BACKEND_URL != '' }}
         with:
           python-version: "3.13"
+
       - run: pip install httpx==0.28.1
+        if: ${{ env.PUBLIC_BACKEND_URL != '' }}
+
       - run: python scripts/refresh_live_data.py
+        if: ${{ env.PUBLIC_BACKEND_URL != '' }}
         env:
-          PUBLIC_BACKEND_URL: ${{ secrets.PUBLIC_BACKEND_URL }}
+          PUBLIC_BACKEND_URL: ${{ env.PUBLIC_BACKEND_URL }}
