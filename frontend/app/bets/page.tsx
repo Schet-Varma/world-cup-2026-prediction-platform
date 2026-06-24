@@ -1,4 +1,4 @@
-import { AlertTriangle, Brain, CalendarDays, ExternalLink, RotateCcw, Target } from "lucide-react";
+import { AlertTriangle, Brain, CalendarDays, ExternalLink, Layers, RotateCcw, Target } from "lucide-react";
 import { BankrollTimeline } from "@/components/BankrollTimeline";
 import { FakeBetSlipCard } from "@/components/FakeBetSlipCard";
 import { getBankrollChallenge } from "@/lib/api";
@@ -6,6 +6,11 @@ import { getBankrollChallenge } from "@/lib/api";
 export default async function BetsPage() {
   const challenge = await getBankrollChallenge();
   const watchlist = challenge.watchlist ?? [];
+  const placedSlips = challenge.slips ?? [];
+  const singleSlips = placedSlips.filter((slip) => slip.legs.length === 1);
+  const multiSlips = placedSlips.filter((slip) => slip.legs.length > 1);
+  const multiRisk = multiSlips.reduce((total, slip) => total + slip.stake, 0);
+  const multiReturn = multiSlips.reduce((total, slip) => total + slip.potential_return, 0);
 
   return (
     <div className="space-y-8">
@@ -90,9 +95,32 @@ export default async function BetsPage() {
       <section>
         <div className="mb-4">
           <h2 className="text-2xl font-black">Money Tracker</h2>
-          <p className="mt-1 text-sm text-slate-600">Track group-stage cash, open risk, model EV mark, and the stretch target separately.</p>
+          <p className="mt-1 text-sm text-slate-600">Track group-stage cash, open risk, model EV mark, and the stretch target separately. Singles stay primary; multis are a capped upside sleeve.</p>
         </div>
         <BankrollTimeline points={challenge.bankroll_timeline} />
+      </section>
+
+      <section>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Layers className="text-pitch" size={22} />
+              <h2 className="text-2xl font-black">Safe Multi Bets</h2>
+            </div>
+            <p className="mt-1 text-sm text-slate-600">Two-leg fake multis built only from legs that already passed the safer single filter. They use tiny stakes and never share a fixture.</p>
+          </div>
+          <span className="rounded bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-coral">capped sleeve</span>
+        </div>
+        <div className="mb-4 grid gap-3 sm:grid-cols-3">
+          <Metric label="Multi risk" value={`$${multiRisk.toFixed(2)}`} />
+          <Metric label="Max return" value={`$${multiReturn.toFixed(2)}`} />
+          <Metric label="Multi slips" value={`${multiSlips.length}`} />
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          {multiSlips.map((slip) => (
+            <FakeBetSlipCard key={slip.id} slip={slip} />
+          ))}
+        </div>
       </section>
 
       <section>
@@ -110,13 +138,13 @@ export default async function BetsPage() {
       <section>
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-black">Fake Group Bet Slips</h2>
-            <p className="mt-1 text-sm text-slate-600">These are simulated placements on remaining group-stage games only. Nothing is sent to a sportsbook.</p>
+            <h2 className="text-2xl font-black">Safe Single Bets</h2>
+            <p className="mt-1 text-sm text-slate-600">These are the base simulated placements on remaining group-stage games only. Nothing is sent to a sportsbook.</p>
           </div>
           <span className="rounded bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-coral">fake money</span>
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
-          {challenge.slips.map((slip) => (
+          {singleSlips.map((slip) => (
             <FakeBetSlipCard key={slip.id} slip={slip} />
           ))}
         </div>

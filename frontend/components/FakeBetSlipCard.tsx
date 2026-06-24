@@ -7,6 +7,8 @@ const marketLabels: Record<string, string> = {
 };
 
 export function FakeBetSlipCard({ slip }: { slip: FakeBetSlip }) {
+  const isMulti = slip.legs.length > 1;
+
   return (
     <article className="rounded border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-4 flex items-start justify-between gap-3">
@@ -15,15 +17,19 @@ export function FakeBetSlipCard({ slip }: { slip: FakeBetSlip }) {
           <h3 className="mt-1 text-lg font-black">{slip.id.replace("fake-", "").replaceAll("-", " ")}</h3>
           <p className="text-sm text-slate-500">{slip.status} · {slip.placed_at}</p>
         </div>
-        <span className="rounded bg-mint px-2 py-1 text-sm font-bold text-pitch">
-          {slip.decimal_odds.toFixed(2)}x
-        </span>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <span className="rounded bg-mint px-2 py-1 text-sm font-bold text-pitch">
+            {slip.decimal_odds.toFixed(2)}x
+          </span>
+          {isMulti ? <span className="rounded bg-slate-100 px-2 py-1 text-xs font-bold text-slate-600">{slip.legs.length} legs</span> : null}
+        </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 text-sm">
+      <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
         <Stat label="Stake" value={`$${slip.stake.toFixed(2)}`} />
         <Stat label="Return" value={`$${slip.potential_return.toFixed(2)}`} />
-        <Stat label="EV" value={`${(slip.expected_value * 100).toFixed(0)}%`} />
+        <Stat label={isMulti ? "Hit" : "Model"} value={`${(slip.model_probability * 100).toFixed(0)}%`} />
+        <Stat label={isMulti ? "Combo EV" : "EV"} value={`${(slip.expected_value * 100).toFixed(0)}%`} />
       </div>
 
       <div className="mt-4 space-y-2">

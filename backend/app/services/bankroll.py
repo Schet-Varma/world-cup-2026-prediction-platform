@@ -18,6 +18,10 @@ from app.services.odds import top_recommendations
 INITIAL_BANKROLL = 100.0
 TARGET_BANKROLL = 1000.0
 MAX_SAFE_EXPOSURE = 28.0
+MAX_MULTI_EXPOSURE = 6.0
+SINGLE_EXPOSURE_BUDGET = MAX_SAFE_EXPOSURE - MAX_MULTI_EXPOSURE
+MAX_SAFE_MULTIS = 3
+MAX_MULTI_LEGS = 2
 KNOCKOUT_INITIAL_BANKROLL = 100.0
 KNOCKOUT_RUNWAY_GAMES = 31
 ROUND_OF_32_RESET_LABEL = "Round of 32 reset"
@@ -65,6 +69,45 @@ def _single_slip(index: int, rec, stake: float, status: str = "fake-open") -> Fa
             *rec.rationale,
         ],
         legs=[_leg_from_recommendation(rec)],
+    )
+
+
+def _combined_metrics(recs) -> tuple[float, float, float, float, float]:
+    decimal_odds = 1.0
+    model_probability = 1.0
+    market_probability = 1.0
+    for rec in recs:
+        decimal_odds *= rec.best_decimal_odds
+        model_probability *= rec.model_probability
+        market_probability *= rec.market_probability
+    expected_value = model_probability * decimal_odds - 1
+    edge = model_probability - market_probability
+    return decimal_odds, model_probability, market_probability, edge, expected_value
+
+
+def _multi_slip(index: int, recs, stake: float) -> FakeBetSlip:
+    decimal_odds, model_probability, market_probability, edge, expected_value = _combined_metrics(recs)
+    potential_return = stake * decimal_odds
+    leg_labels = "; ".join(f"{rec.selection} in {rec.fixture_label}" for rec in recs)
+    return FakeBetSlip(
+        id=f"fake-safe-multi-{index + 1}",
+        kind="safe multi",
+        stake=round(stake, 2),
+        decimal_odds=round(decimal_odds, 4),
+        model_probability=round(model_probability, 6),
+        market_probability=round(market_probability, 6),
+        edge=round(edge, 6),
+        expected_value=round(expected_value, 6),
+        potential_return=round(potential_return, 2),
+        potential_profit=round(potential_return - stake, 2),
+        status="fake-open",
+        placed_at="2026-06-24 practice card",
+        rationale=[
+            f"Two-leg multi only: {leg_labels}. No same-fixture stacking.",
+            f"Combined model hit rate is {model_probability:.1%} versus market-implied {market_probability:.1%}; this is upside, not the core plan.",
+            "Stake is capped as a tiny sleeve because leg independence is approximate and multis can miss easily.",
+        ],
+        legs=[_leg_from_recommendation(rec) for rec in recs],
     )
 
 
@@ -176,11 +219,11 @@ def _plan() -> list[StrategyStep]:
         ),
         StrategyStep(
             title="Markets",
-            detail="Prefer lower-variance singles such as BTTS/totals or strong favorites. Avoid draw bets and low-probability upset singles.",
+            detail="Prefer lower-variance singles such as BTTS/totals or strong favorites. Add only tiny two-leg multis from already-safe legs.",
         ),
         StrategyStep(
             title="Stake sizing",
-            detail="Use fractional Kelly as a ceiling, then cap each slip at $3-$6 and today’s total open risk at $28 or lower.",
+            detail=f"Use fractional Kelly as a ceiling, cap singles at $3-$6, reserve no more than ${MAX_MULTI_EXPOSURE:.0f} for multis, and keep total open risk at ${MAX_SAFE_EXPOSURE:.0f} or lower.",
         ),
         StrategyStep(
             title="News gate",
@@ -219,6 +262,39 @@ def _stake_for(rec, bankroll: float, remaining_budget: float) -> float:
     return round(max(stake, 0.0), 2)
 
 
+def _multi_stake_for(expected_value: float, model_probability: float, remaining_budget: float) -> float:
+    if remaining_budget < 2 or expected_value < 0.06 or model_probability < 0.3:
+        return 0.0
+    base = 2.0
+    if expected_value >= 0.18 and model_probability >= 0.34:
+        base = 2.5
+    if expected_value >= 0.28 and model_probability >= 0.36:
+        base = 3.0
+    return round(min(base, remaining_budget), 2)
+
+
+def _multi_candidates(recs) -> list[tuple[float, float, float, float, tuple]]:
+    rows: list[tuple[float, float, float, float, tuple]] = []
+    for left_index, left in enumerate(recs):
+        for right in recs[left_index + 1 :]:
+            if left.fixture_id == right.fixture_id:
+                continue
+            pair = (left, right)
+            decimal_odds, model_probability, market_probability, edge, expected_value = _combined_metrics(pair)
+            if len(pair) != MAX_MULTI_LEGS:
+                continue
+            if not 2.8 <= decimal_odds <= 4.75:
+                continue
+            if model_probability < 0.3 or edge < 0.025 or expected_value < 0.06:
+                continue
+            if min(left.confidence, right.confidence) < 0.7:
+                continue
+            score = expected_value + edge + (model_probability * 0.1)
+            rows.append((score, expected_value, model_probability, edge, pair))
+    rows.sort(key=lambda item: item[:4], reverse=True)
+    return rows
+
+
 def _phase_plan(group_ev_bankroll: float) -> list[BankrollPhase]:
     return [
         BankrollPhase(
@@ -229,7 +305,7 @@ def _phase_plan(group_ev_bankroll: float) -> list[BankrollPhase]:
             fixture_count=len(load_group_fixtures()),
             match_window="Remaining group-stage fixtures",
             reset_trigger="Settles when the final group-stage fixture in the seed slate is complete.",
-            exposure_policy=f"Keep open fake risk at ${MAX_SAFE_EXPOSURE:.0f} or lower; prefer singles and hold cash when edges are thin.",
+            exposure_policy=f"Keep open fake risk at ${MAX_SAFE_EXPOSURE:.0f} or lower, with at most ${MAX_MULTI_EXPOSURE:.0f} reserved for tiny two-leg multis.",
             description=(
                 "Use this phase to test whether the model can make disciplined small-EV decisions before the bracket locks. "
                 f"The current model-EV mark is ${group_ev_bankroll:.2f}, but no group-stage result carries into the knockout reset."
@@ -270,7 +346,8 @@ def build_bankroll_challenge() -> BankrollChallenge:
 
     used_fixtures: set[str] = set()
     slips: list[FakeBetSlip] = []
-    remaining_budget = MAX_SAFE_EXPOSURE
+    remaining_budget = SINGLE_EXPOSURE_BUDGET
+    single_recs = []
     for rec in safe_candidates:
         if rec.fixture_id in used_fixtures or remaining_budget < 3:
             continue
@@ -278,10 +355,28 @@ def build_bankroll_challenge() -> BankrollChallenge:
         if stake < 3:
             continue
         slips.append(_single_slip(len(slips), rec, stake))
+        single_recs.append(rec)
         used_fixtures.add(rec.fixture_id)
         remaining_budget = round(remaining_budget - stake, 2)
         if len(slips) >= 7:
             break
+
+    multi_budget = min(MAX_MULTI_EXPOSURE, MAX_SAFE_EXPOSURE - sum(slip.stake for slip in slips))
+    used_multi_fixtures: set[str] = set()
+    multi_count = 0
+    for _, expected_value, model_probability, _, pair in _multi_candidates(single_recs):
+        if multi_count >= MAX_SAFE_MULTIS or multi_budget < 2:
+            break
+        pair_fixture_ids = {rec.fixture_id for rec in pair}
+        if used_multi_fixtures & pair_fixture_ids:
+            continue
+        stake = _multi_stake_for(expected_value, model_probability, multi_budget)
+        if stake < 2:
+            continue
+        slips.append(_multi_slip(multi_count, pair, stake))
+        used_multi_fixtures |= pair_fixture_ids
+        multi_count += 1
+        multi_budget = round(multi_budget - stake, 2)
 
     watchlist = []
     for rec in unsafe_candidates[:8]:
@@ -320,7 +415,7 @@ def build_bankroll_challenge() -> BankrollChallenge:
             available_cash=round(available_cash, 2),
             open_risk=round(open_risk, 2),
             potential_return=round(sum(slip.potential_return for slip in slips), 2),
-            note="Only safe-filter singles are fake-placed; rejected edges are visible below.",
+            note="Safe singles plus tiny two-leg multis are fake-placed; rejected edges are visible below.",
         ),
         BankrollPoint(
             label="Model EV mark",

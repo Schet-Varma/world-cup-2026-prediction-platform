@@ -64,11 +64,20 @@ def test_bankroll_challenge_builds_fake_slips_and_timeline():
     assert challenge.watchlist
     assert challenge.bankroll_timeline
     assert challenge.open_risk <= 28
-    assert all(slip.model_probability >= 0.525 for slip in challenge.slips)
+    single_slips = [slip for slip in challenge.slips if len(slip.legs) == 1]
+    multi_slips = [slip for slip in challenge.slips if len(slip.legs) > 1]
+    assert single_slips
+    assert multi_slips
+    assert all(slip.kind == "safe multi" for slip in multi_slips)
+    assert all(len(slip.legs) == 2 for slip in multi_slips)
+    assert sum(slip.stake for slip in multi_slips) <= 6
+    multi_fixture_ids = [leg.fixture_id for slip in multi_slips for leg in slip.legs]
+    assert len(multi_fixture_ids) == len(set(multi_fixture_ids))
+    assert all(leg.model_probability >= 0.525 for slip in challenge.slips for leg in slip.legs)
     assert all(slip.stake > 0 for slip in challenge.slips)
     assert all(slip.stake == 0 for slip in challenge.watchlist)
-    assert all(slip.legs[0].fixture_id.startswith("grp-") for slip in challenge.slips)
-    assert all(slip.legs[0].fixture_id.startswith("grp-") for slip in challenge.watchlist)
+    assert all(leg.fixture_id.startswith("grp-") for slip in challenge.slips for leg in slip.legs)
+    assert all(leg.fixture_id.startswith("grp-") for slip in challenge.watchlist for leg in slip.legs)
     assert challenge.knockout_runway_games == 31
     assert "restart with $100" in challenge.reset_policy
     assert [phase.title for phase in challenge.phase_plan] == [

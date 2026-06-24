@@ -224,17 +224,18 @@ const demoBankrollChallenge: BankrollChallenge = {
   initial_bankroll: 100,
   target_bankroll: 1000,
   slate_size: 8,
-  available_cash: 85,
-  open_risk: 15,
-  current_mark_to_model: 101.9,
-  max_possible_bankroll: 112.95,
+  available_cash: 82.5,
+  open_risk: 17.5,
+  current_mark_to_model: 102.6,
+  max_possible_bankroll: 119.65,
   probability_to_target: 0,
-  target_assessment: "Safe mode starts on remaining group-stage games. It cannot honestly project a high-probability 10x from one card, so it compounds small positive-EV fake bets across the group slate instead of chasing longshots.",
+  target_assessment: "Safe mode keeps this group-stage run alive until groups end, then resets to $100 for Round of 32. The 10x push belongs to the longer knockout runway, not a rushed group-stage chase.",
   risk_warning: "Fake money only. Safe mode prioritizes survival and disciplined compounding; it will hold cash rather than force risky bets.",
   plan: [
     { title: "Reality check", detail: "Practice on remaining group-stage games only and refuse forced action.", status: "active" },
     { title: "Remaining group screen", detail: "Place fake bets that pass probability, odds-band, edge, and confidence filters.", status: "active" },
-    { title: "Stake sizing", detail: "Use fractional Kelly as a ceiling with small single stakes and reserve cash.", status: "active" }
+    { title: "Markets", detail: "Prefer safe singles and add only tiny two-leg multis from already-safe legs.", status: "active" },
+    { title: "Stake sizing", detail: "Use fractional Kelly as a ceiling with small single stakes, a capped multi sleeve, and reserve cash.", status: "active" }
   ],
   research_sources: [
     {
@@ -333,6 +334,47 @@ const demoBankrollChallenge: BankrollChallenge = {
           edge: 0.065
         }
       ]
+    },
+    {
+      id: "demo-safe-multi-1",
+      kind: "safe multi",
+      stake: 2.5,
+      decimal_odds: 3.68,
+      model_probability: 0.349,
+      market_probability: 0.272,
+      edge: 0.077,
+      expected_value: 0.283,
+      potential_return: 9.2,
+      potential_profit: 6.7,
+      status: "fake-open",
+      placed_at: "2026-06-24 practice card",
+      rationale: [
+        "Two-leg multi only: Yes in Scotland vs Brazil; Under 2.5 in Morocco vs Haiti. No same-fixture stacking.",
+        "Combined model hit rate is 34.9% versus market-implied 27.2%; this is upside, not the core plan.",
+        "Stake is capped as a tiny sleeve because leg independence is approximate and multis can miss easily."
+      ],
+      legs: [
+        {
+          fixture_id: "grp-c-05",
+          fixture_label: "Scotland vs Brazil",
+          market: "btts",
+          selection: "Yes",
+          decimal_odds: 2.02,
+          model_probability: 0.568,
+          market_probability: 0.495,
+          edge: 0.073
+        },
+        {
+          fixture_id: "grp-c-06",
+          fixture_label: "Morocco vs Haiti",
+          market: "totals",
+          selection: "Under 2.5",
+          decimal_odds: 1.82,
+          model_probability: 0.615,
+          market_probability: 0.549,
+          edge: 0.066
+        }
+      ]
     }
   ],
   watchlist: [
@@ -366,8 +408,8 @@ const demoBankrollChallenge: BankrollChallenge = {
   ],
   bankroll_timeline: [
     { label: "Start", bankroll: 100, available_cash: 100, open_risk: 0, potential_return: 0, note: "Fake bankroll initialized." },
-    { label: "Today locked", bankroll: 100, available_cash: 85, open_risk: 15, potential_return: 27.95, note: "Only remaining group-stage safe singles are fake-placed." },
-    { label: "Model EV mark", bankroll: 101.9, available_cash: 85, open_risk: 15, potential_return: 27.95, note: "Expected value mark after the conservative fake card, not settled cash." },
+    { label: "Today locked", bankroll: 100, available_cash: 82.5, open_risk: 17.5, potential_return: 37.15, note: "Safe singles plus a tiny two-leg multi are fake-placed." },
+    { label: "Model EV mark", bankroll: 102.6, available_cash: 82.5, open_risk: 17.5, potential_return: 37.15, note: "Expected value mark after the conservative fake card, not settled cash." },
     { label: "Round of 32 reset", bankroll: 100, available_cash: 100, open_risk: 0, potential_return: 0, note: "Knockout ledger starts fresh at $100; group-stage profit or loss is archived." }
   ],
   phase_plan: [
@@ -379,7 +421,7 @@ const demoBankrollChallenge: BankrollChallenge = {
       fixture_count: 8,
       match_window: "Remaining group-stage fixtures",
       reset_trigger: "Settles when the final group-stage fixture is complete.",
-      exposure_policy: "Keep open fake risk at $28 or lower; prefer singles and hold cash when edges are thin.",
+      exposure_policy: "Keep open fake risk at $28 or lower, with at most $6 reserved for tiny two-leg multis.",
       description: "Use this phase to test disciplined small-EV decisions before the bracket locks.",
       checkpoints: [
         "Refresh results and news after each group match window.",
