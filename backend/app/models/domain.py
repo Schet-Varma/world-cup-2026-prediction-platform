@@ -194,6 +194,19 @@ class BankrollPoint(BaseModel):
     note: str
 
 
+class BankrollPhase(BaseModel):
+    title: str
+    status: str
+    starting_bankroll: float
+    target_bankroll: float
+    fixture_count: int
+    match_window: str
+    reset_trigger: str
+    exposure_policy: str
+    description: str
+    checkpoints: list[str]
+
+
 class BankrollChallenge(BaseModel):
     title: str
     mode: str
@@ -213,4 +226,7 @@ class BankrollChallenge(BaseModel):
     slips: list[FakeBetSlip]
     watchlist: list[FakeBetSlip]
     bankroll_timeline: list[BankrollPoint]
+    phase_plan: list[BankrollPhase]
+    reset_policy: str
+    knockout_runway_games: int
     news_context: list[NewsItem]

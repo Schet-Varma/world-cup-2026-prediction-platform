@@ -367,7 +367,44 @@ const demoBankrollChallenge: BankrollChallenge = {
   bankroll_timeline: [
     { label: "Start", bankroll: 100, available_cash: 100, open_risk: 0, potential_return: 0, note: "Fake bankroll initialized." },
     { label: "Today locked", bankroll: 100, available_cash: 85, open_risk: 15, potential_return: 27.95, note: "Only remaining group-stage safe singles are fake-placed." },
-    { label: "Model EV mark", bankroll: 101.9, available_cash: 85, open_risk: 15, potential_return: 27.95, note: "Expected value mark after the conservative fake card, not settled cash." }
+    { label: "Model EV mark", bankroll: 101.9, available_cash: 85, open_risk: 15, potential_return: 27.95, note: "Expected value mark after the conservative fake card, not settled cash." },
+    { label: "Round of 32 reset", bankroll: 100, available_cash: 100, open_risk: 0, potential_return: 0, note: "Knockout ledger starts fresh at $100; group-stage profit or loss is archived." }
   ],
+  phase_plan: [
+    {
+      title: "Group-stage practice run",
+      status: "active until groups end",
+      starting_bankroll: 100,
+      target_bankroll: 1000,
+      fixture_count: 8,
+      match_window: "Remaining group-stage fixtures",
+      reset_trigger: "Settles when the final group-stage fixture is complete.",
+      exposure_policy: "Keep open fake risk at $28 or lower; prefer singles and hold cash when edges are thin.",
+      description: "Use this phase to test disciplined small-EV decisions before the bracket locks.",
+      checkpoints: [
+        "Refresh results and news after each group match window.",
+        "Settle open fake slips, then update available cash and rejected edges.",
+        "Do not add recovery bets after a miss."
+      ]
+    },
+    {
+      title: "Round of 32 knockout reset",
+      status: "queued",
+      starting_bankroll: 100,
+      target_bankroll: 1000,
+      fixture_count: 31,
+      match_window: "16 Round of 32 fixtures loaded now, 31 knockout matches planned across the full bracket",
+      reset_trigger: "Starts when the Round of 32 bracket is confirmed.",
+      exposure_policy: "Reset to $100, use 2-4% base units, cap daily exposure, and scale only after settled profit.",
+      description: "This is the more realistic 10x attempt: about thirty knockout matches gives the model more chances to compound safely.",
+      checkpoints: [
+        "Begin with no carry-over from group-stage profit or loss.",
+        "Separate core singles from tiny optional upside slips.",
+        "Stop for the day if drawdown hits 12% of the reset bankroll."
+      ]
+    }
+  ],
+  reset_policy: "At Round of 32 reset, archive the group-stage ledger and restart with $100. The knockout target stays $1000 across about 31 matches.",
+  knockout_runway_games: 31,
   news_context: demoNews
 };

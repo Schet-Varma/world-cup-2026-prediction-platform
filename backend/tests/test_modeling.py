@@ -69,3 +69,11 @@ def test_bankroll_challenge_builds_fake_slips_and_timeline():
     assert all(slip.stake == 0 for slip in challenge.watchlist)
     assert all(slip.legs[0].fixture_id.startswith("grp-") for slip in challenge.slips)
     assert all(slip.legs[0].fixture_id.startswith("grp-") for slip in challenge.watchlist)
+    assert challenge.knockout_runway_games == 31
+    assert "restart with $100" in challenge.reset_policy
+    assert [phase.title for phase in challenge.phase_plan] == [
+        "Group-stage practice run",
+        "Round of 32 knockout reset",
+    ]
+    assert challenge.phase_plan[1].starting_bankroll == 100
+    assert challenge.phase_plan[1].fixture_count == 31

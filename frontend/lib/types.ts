@@ -155,6 +155,19 @@ export type BankrollPoint = {
   note: string;
 };
 
+export type BankrollPhase = {
+  title: string;
+  status: string;
+  starting_bankroll: number;
+  target_bankroll: number;
+  fixture_count: number;
+  match_window: string;
+  reset_trigger: string;
+  exposure_policy: string;
+  description: string;
+  checkpoints: string[];
+};
+
 export type BankrollChallenge = {
   title: string;
   mode: string;
@@ -174,5 +187,8 @@ export type BankrollChallenge = {
   slips: FakeBetSlip[];
   watchlist: FakeBetSlip[];
   bankroll_timeline: BankrollPoint[];
+  phase_plan: BankrollPhase[];
+  reset_policy: string;
+  knockout_runway_games: number;
   news_context: NewsItem[];
 };

@@ -1,4 +1,4 @@
-import { AlertTriangle, Brain, ExternalLink, Target } from "lucide-react";
+import { AlertTriangle, Brain, CalendarDays, ExternalLink, RotateCcw, Target } from "lucide-react";
 import { BankrollTimeline } from "@/components/BankrollTimeline";
 import { FakeBetSlipCard } from "@/components/FakeBetSlipCard";
 import { getBankrollChallenge } from "@/lib/api";
@@ -31,6 +31,43 @@ export default async function BetsPage() {
             <Line label="Model EV bankroll" value={`$${challenge.current_mark_to_model.toFixed(2)}`} />
             <Line label="Chance to target" value={`${(challenge.probability_to_target * 100).toFixed(1)}%`} />
           </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-4 flex items-center gap-2">
+          <RotateCcw className="text-pitch" size={22} />
+          <h2 className="text-2xl font-black">Reset Schedule</h2>
+        </div>
+        <p className="mb-4 border-l-4 border-coral bg-white p-3 text-sm text-slate-700 shadow-sm">{challenge.reset_policy}</p>
+        <div className="grid gap-4 lg:grid-cols-2">
+          {challenge.phase_plan.map((phase) => (
+            <article key={phase.title} className="rounded border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-pitch">{phase.status}</p>
+                  <h3 className="mt-1 text-xl font-black">{phase.title}</h3>
+                </div>
+                <CalendarDays className="shrink-0 text-coral" />
+              </div>
+              <p className="mt-3 text-sm text-slate-600">{phase.description}</p>
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                <PhaseStat label="Start" value={`$${phase.starting_bankroll.toFixed(0)}`} />
+                <PhaseStat label="Target" value={`$${phase.target_bankroll.toFixed(0)}`} />
+                <PhaseStat label="Games" value={`${phase.fixture_count}`} />
+              </div>
+              <div className="mt-4 space-y-2 text-sm text-slate-600">
+                <p><span className="font-bold text-ink">Window:</span> {phase.match_window}</p>
+                <p><span className="font-bold text-ink">Trigger:</span> {phase.reset_trigger}</p>
+                <p><span className="font-bold text-ink">Risk:</span> {phase.exposure_policy}</p>
+              </div>
+              <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                {phase.checkpoints.map((checkpoint) => (
+                  <li key={checkpoint} className="border-l-4 border-pitch pl-3">{checkpoint}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -141,6 +178,15 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="border-l-4 border-pitch bg-slate-50 p-4">
       <p className="text-sm text-slate-500">{label}</p>
       <p className="text-2xl font-black">{value}</p>
+    </div>
+  );
+}
+
+function PhaseStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-slate-50 p-3">
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-lg font-black">{value}</p>
     </div>
   );
 }

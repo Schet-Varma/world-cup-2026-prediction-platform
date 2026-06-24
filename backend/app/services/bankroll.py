@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from app.models.domain import (
     BankrollChallenge,
+    BankrollPhase,
     BankrollPoint,
     BetLeg,
     FakeBetSlip,
@@ -9,7 +10,7 @@ from app.models.domain import (
     ResearchSource,
     StrategyStep,
 )
-from app.data.loaders import load_group_fixtures
+from app.data.loaders import load_fixtures, load_group_fixtures
 from app.services.news import latest_news
 from app.services.odds import top_recommendations
 
@@ -17,6 +18,9 @@ from app.services.odds import top_recommendations
 INITIAL_BANKROLL = 100.0
 TARGET_BANKROLL = 1000.0
 MAX_SAFE_EXPOSURE = 28.0
+KNOCKOUT_INITIAL_BANKROLL = 100.0
+KNOCKOUT_RUNWAY_GAMES = 31
+ROUND_OF_32_RESET_LABEL = "Round of 32 reset"
 
 
 def _fractional_kelly(probability: float, decimal_odds: float, fraction: float = 0.18) -> float:
@@ -164,7 +168,7 @@ def _plan() -> list[StrategyStep]:
     return [
         StrategyStep(
             title="Reality check",
-            detail="The $100 to $1,000 aim starts today on remaining group-stage games. Safe mode will not force bets just to make the math look exciting.",
+            detail="The active ledger keeps running through the remaining group-stage games, but Safe Growth Mode will not force bets just to make the math look exciting.",
         ),
         StrategyStep(
             title="Remaining group screen",
@@ -185,6 +189,10 @@ def _plan() -> list[StrategyStep]:
         StrategyStep(
             title="Stop rules",
             detail="No chasing and no same-match overexposure. If safe filters do not find enough plays, hold cash.",
+        ),
+        StrategyStep(
+            title=ROUND_OF_32_RESET_LABEL,
+            detail="When the Round of 32 bracket locks, archive this group-stage practice ledger and restart the fake bankroll at $100 for the knockout runway.",
         ),
     ]
 
@@ -209,6 +217,50 @@ def _stake_for(rec, bankroll: float, remaining_budget: float) -> float:
     base_unit = 5.0 if rec.model_probability >= 0.55 or rec.edge >= 0.07 else 4.0
     stake = min(6.0, max(base_unit, kelly_dollars * confidence_multiplier), remaining_budget)
     return round(max(stake, 0.0), 2)
+
+
+def _phase_plan(group_ev_bankroll: float) -> list[BankrollPhase]:
+    return [
+        BankrollPhase(
+            title="Group-stage practice run",
+            status="active until groups end",
+            starting_bankroll=INITIAL_BANKROLL,
+            target_bankroll=TARGET_BANKROLL,
+            fixture_count=len(load_group_fixtures()),
+            match_window="Remaining group-stage fixtures",
+            reset_trigger="Settles when the final group-stage fixture in the seed slate is complete.",
+            exposure_policy=f"Keep open fake risk at ${MAX_SAFE_EXPOSURE:.0f} or lower; prefer singles and hold cash when edges are thin.",
+            description=(
+                "Use this phase to test whether the model can make disciplined small-EV decisions before the bracket locks. "
+                f"The current model-EV mark is ${group_ev_bankroll:.2f}, but no group-stage result carries into the knockout reset."
+            ),
+            checkpoints=[
+                "Refresh results and news after each group match window.",
+                "Settle open fake slips, then update available cash and rejected edges.",
+                "Do not add recovery bets after a miss; only place new slips that pass the same safe filters.",
+            ],
+        ),
+        BankrollPhase(
+            title="Round of 32 knockout reset",
+            status="queued",
+            starting_bankroll=KNOCKOUT_INITIAL_BANKROLL,
+            target_bankroll=TARGET_BANKROLL,
+            fixture_count=KNOCKOUT_RUNWAY_GAMES,
+            match_window=f"{len(load_fixtures())} Round of 32 fixtures loaded now, {KNOCKOUT_RUNWAY_GAMES} knockout matches planned across the full bracket",
+            reset_trigger="Starts when the Round of 32 bracket is confirmed.",
+            exposure_policy="Reset to $100, use 2-4% base units, cap daily exposure, and scale only after settled profit.",
+            description=(
+                "This is the more realistic 10x attempt: about thirty knockout matches gives the model more chances to compound "
+                "safe singles, selective plus-money totals, and only tiny higher-variance sleeves."
+            ),
+            checkpoints=[
+                "Begin with no carry-over from group-stage profit or loss.",
+                "Separate core singles from tiny optional upside slips.",
+                "Re-rate every matchup after lineups, travel, injuries, and market movement.",
+                "Stop for the day if drawdown hits 12% of the reset bankroll.",
+            ],
+        ),
+    ]
 
 
 def build_bankroll_challenge() -> BankrollChallenge:
@@ -249,8 +301,9 @@ def build_bankroll_challenge() -> BankrollChallenge:
     if max_possible >= TARGET_BANKROLL:
         target_probability = min(0.08, sum(slip.model_probability for slip in slips) / max(len(slips), 1) * 0.08)
     target_assessment = (
-        "Safe mode starts on remaining group-stage games. It cannot honestly project a high-probability 10x from one card; the path is to compound small positive-EV fake bets across the group slate, not to chase longshots."
+        "Safe mode keeps this group-stage run alive until groups end, then resets to $100 for Round of 32. The 10x push belongs to the longer knockout runway, not a rushed group-stage chase."
     )
+    group_ev_bankroll = round(INITIAL_BANKROLL + expected_profit, 2)
 
     bankroll_timeline = [
         BankrollPoint(
@@ -271,21 +324,38 @@ def build_bankroll_challenge() -> BankrollChallenge:
         ),
         BankrollPoint(
             label="Model EV mark",
-            bankroll=round(INITIAL_BANKROLL + expected_profit, 2),
+            bankroll=group_ev_bankroll,
             available_cash=round(available_cash, 2),
             open_risk=round(open_risk, 2),
             potential_return=round(sum(slip.potential_return for slip in slips), 2),
             note="Expected value mark after today’s conservative fake card, not settled cash.",
         ),
         BankrollPoint(
-            label="Stretch target",
-            bankroll=round(max_possible, 2),
-            available_cash=round(available_cash, 2),
-            open_risk=round(open_risk, 2),
-            potential_return=round(sum(slip.potential_return for slip in slips), 2),
-            note="Upper bound for today. The $1,000 goal requires repeated compounding, not today’s all-in risk.",
+            label="Group-stage close",
+            bankroll=group_ev_bankroll,
+            available_cash=group_ev_bankroll,
+            open_risk=0,
+            potential_return=0,
+            note="Projected group-stage practice close after all open fake slips settle at model EV.",
+        ),
+        BankrollPoint(
+            label=ROUND_OF_32_RESET_LABEL,
+            bankroll=KNOCKOUT_INITIAL_BANKROLL,
+            available_cash=KNOCKOUT_INITIAL_BANKROLL,
+            open_risk=0,
+            potential_return=0,
+            note="Knockout ledger starts fresh at $100; group-stage profit or loss is archived, not carried.",
+        ),
+        BankrollPoint(
+            label="Knockout runway",
+            bankroll=TARGET_BANKROLL,
+            available_cash=TARGET_BANKROLL,
+            open_risk=0,
+            potential_return=0,
+            note=f"Stretch target over about {KNOCKOUT_RUNWAY_GAMES} knockout matches, with safer compounding and no forced all-in card.",
         ),
     ]
+    phase_plan = _phase_plan(group_ev_bankroll)
 
     return BankrollChallenge(
         title="Safe $100 Practice Bankroll",
@@ -296,7 +366,7 @@ def build_bankroll_challenge() -> BankrollChallenge:
         slate_size=len(load_group_fixtures()),
         available_cash=round(available_cash, 2),
         open_risk=round(open_risk, 2),
-        current_mark_to_model=round(INITIAL_BANKROLL + expected_profit, 2),
+        current_mark_to_model=group_ev_bankroll,
         max_possible_bankroll=round(max_possible, 2),
         probability_to_target=target_probability,
         target_assessment=target_assessment,
@@ -306,5 +376,11 @@ def build_bankroll_challenge() -> BankrollChallenge:
         slips=slips,
         watchlist=watchlist,
         bankroll_timeline=bankroll_timeline,
+        phase_plan=phase_plan,
+        reset_policy=(
+            f"At {ROUND_OF_32_RESET_LABEL}, archive the group-stage ledger and restart with ${KNOCKOUT_INITIAL_BANKROLL:.0f}. "
+            f"The knockout target stays ${TARGET_BANKROLL:.0f} across about {KNOCKOUT_RUNWAY_GAMES} matches."
+        ),
+        knockout_runway_games=KNOCKOUT_RUNWAY_GAMES,
         news_context=_group_stage_news_context(),
     )
