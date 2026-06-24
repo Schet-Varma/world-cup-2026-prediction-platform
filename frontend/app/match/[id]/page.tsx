@@ -1,5 +1,6 @@
 import { Gauge, Goal, ShieldQuestion } from "lucide-react";
 import { ProbabilityBar } from "@/components/ProbabilityBar";
+import { TeamFlag } from "@/components/TeamFlag";
 import { getPrediction } from "@/lib/api";
 import type { ReactNode } from "react";
 
@@ -9,21 +10,27 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="space-y-6">
-      <section className="rounded border border-slate-200 bg-white p-6 shadow-panel">
+      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-panel">
+        <div className="h-1.5 bg-[linear-gradient(90deg,#0f5f4a,#d9f99d,#ff6b5f)]" />
+        <div className="p-6">
         <p className="text-sm font-semibold uppercase tracking-wide text-pitch">{prediction.fixture.round}</p>
-        <h1 className="mt-2 text-3xl font-black">
-          {prediction.home_team.name} vs {prediction.away_team.name}
-        </h1>
+        <h1 className="sr-only">{prediction.home_team.name} vs {prediction.away_team.name}</h1>
+        <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+          <TeamFlag teamId={prediction.home_team.id} teamName={prediction.home_team.name} label={prediction.home_team.name} />
+          <span className="hidden rounded bg-ink px-3 py-2 text-sm font-black text-white sm:inline-flex">vs</span>
+          <TeamFlag teamId={prediction.away_team.id} teamName={prediction.away_team.name} label={prediction.away_team.name} align="right" />
+        </div>
         <p className="mt-2 text-slate-600">{prediction.fixture.venue}</p>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           <Metric icon={<Goal />} label="Most likely score" value={prediction.most_likely_score} />
           <Metric icon={<Gauge />} label="Expected goals" value={`${prediction.expected_home_goals} - ${prediction.expected_away_goals}`} />
           <Metric icon={<ShieldQuestion />} label="Upset chance" value={`${(prediction.upset_probability * 100).toFixed(1)}%`} />
         </div>
+        </div>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-xl font-bold">Win Probabilities</h2>
           <div className="space-y-4">
             <ProbabilityBar label={prediction.home_team.name} value={prediction.home_win_probability} />
@@ -31,7 +38,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             <ProbabilityBar label={prediction.away_team.name} value={prediction.away_win_probability} tone="red" />
           </div>
         </div>
-        <div className="rounded border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-xl font-bold">Top Scorelines</h2>
           <div className="grid gap-2">
             {prediction.top_scorelines.map((scoreline) => (
@@ -53,11 +60,11 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
         <Metric icon={<ShieldQuestion />} label={`${prediction.home_team.name} clean sheet`} value={`${(prediction.home_clean_sheet_probability * 100).toFixed(1)}%`} />
       </section>
 
-      <section className="rounded border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-xl font-bold">Explanation</h2>
         <div className="grid gap-3 md:grid-cols-2">
           {prediction.explanation.map((item) => (
-            <p key={item} className="border-l-4 border-pitch bg-slate-50 p-3 text-sm text-slate-700">{item}</p>
+            <p key={item} className="rounded border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">{item}</p>
           ))}
         </div>
       </section>
@@ -67,7 +74,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
 
 function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
-    <div className="rounded border border-slate-200 bg-slate-50 p-4">
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
       <div className="mb-2 text-pitch">{icon}</div>
       <p className="text-sm text-slate-500">{label}</p>
       <p className="text-2xl font-black">{value}</p>

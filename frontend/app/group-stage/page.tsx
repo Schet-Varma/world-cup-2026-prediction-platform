@@ -1,6 +1,7 @@
 import { BettingCard } from "@/components/BettingCard";
 import { LiveIntelPanel } from "@/components/LiveIntelPanel";
 import { PredictionTile } from "@/components/PredictionTile";
+import { WorldCupHero } from "@/components/WorldCupHero";
 import { getBettingRecommendations, getGroupPredictions, getLiveStatus, getNews } from "@/lib/api";
 
 export default async function GroupStagePage() {
@@ -13,13 +14,17 @@ export default async function GroupStagePage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-pitch">Live model test block</p>
-        <h1 className="mt-2 text-3xl font-black">Remaining Group Stage Games</h1>
-        <p className="mt-2 max-w-3xl text-slate-600">
-          These fixtures let the model learn from results, odds movement, and news before the Round of 32 bracket becomes official.
-        </p>
-      </div>
+      <WorldCupHero
+        eyebrow="Live model test block"
+        title="Remaining group-stage games before the bracket locks."
+        description="These fixtures let the model learn from results, odds movement, and news before the Round of 32 bracket becomes official."
+        compact
+        stats={[
+          { label: "Predictions", value: `${predictions.length}`, detail: "active group fixtures" },
+          { label: "Value candidates", value: `${picks.length}`, detail: "verify live odds" },
+          { label: "Mode", value: status.fallback_mode ? "Seed data" : "Live APIs", detail: status.news_provider }
+        ]}
+      />
 
       <LiveIntelPanel status={status} news={news} />
 

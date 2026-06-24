@@ -1,4 +1,5 @@
 import type { FakeBetSlip } from "@/lib/types";
+import { TeamFlag } from "./TeamFlag";
 
 const marketLabels: Record<string, string> = {
   h2h: "Match result",
@@ -10,7 +11,9 @@ export function FakeBetSlipCard({ slip }: { slip: FakeBetSlip }) {
   const isMulti = slip.legs.length > 1;
 
   return (
-    <article className="rounded border border-slate-200 bg-white p-4 shadow-sm">
+    <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-panel">
+      <div className={`h-1.5 ${isMulti ? "bg-[linear-gradient(90deg,#ff6b5f,#d9f99d,#0f5f4a)]" : "bg-[linear-gradient(90deg,#0f5f4a,#d9f99d,#ff6b5f)]"}`} />
+      <div className="p-4">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-pitch">{slip.kind}</p>
@@ -35,11 +38,11 @@ export function FakeBetSlipCard({ slip }: { slip: FakeBetSlip }) {
       <div className="mt-4 space-y-2">
         {slip.legs.map((leg) => (
           <div key={`${slip.id}-${leg.fixture_id}-${leg.selection}`} className="rounded bg-slate-50 p-3">
+            <LegFixture label={leg.fixture_label} />
             <div className="flex items-center justify-between gap-3">
               <span className="font-bold">{leg.selection}</span>
               <span className="text-sm text-slate-500">{marketLabels[leg.market] ?? leg.market}</span>
             </div>
-            <p className="mt-1 text-sm text-slate-600">{leg.fixture_label}</p>
             <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-coral">
               model {(leg.model_probability * 100).toFixed(1)}% · market {(leg.market_probability * 100).toFixed(1)}% · edge {(leg.edge * 100).toFixed(1)}%
             </p>
@@ -52,7 +55,19 @@ export function FakeBetSlipCard({ slip }: { slip: FakeBetSlip }) {
           <li key={item} className="border-l-4 border-pitch pl-3">{item}</li>
         ))}
       </ul>
+      </div>
     </article>
+  );
+}
+
+function LegFixture({ label }: { label: string }) {
+  const [homeName, awayName] = label.split(" vs ");
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+      <TeamFlag teamName={homeName} compact />
+      <span className="rounded bg-white px-2 py-1 text-xs font-black text-slate-500">vs</span>
+      <TeamFlag teamName={awayName} compact />
+    </div>
   );
 }
 

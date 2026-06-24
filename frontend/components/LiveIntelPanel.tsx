@@ -3,7 +3,8 @@ import type { LiveDataStatus, NewsItem } from "@/lib/types";
 export function LiveIntelPanel({ status, news }: { status: LiveDataStatus; news: NewsItem[] }) {
   return (
     <section className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
-      <div className="rounded border border-slate-200 bg-ink p-5 text-white shadow-panel">
+      <div className="relative overflow-hidden rounded-lg border border-white/10 bg-ink p-5 text-white shadow-panel">
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-[linear-gradient(90deg,#ff6b5f,#d9f99d,#0f5f4a)]" aria-hidden="true" />
         <p className="text-xs font-semibold uppercase tracking-wide text-mint">Live tracking</p>
         <h2 className="mt-2 text-2xl font-black">Provider Status</h2>
         <div className="mt-5 grid gap-3 text-sm">
@@ -14,12 +15,12 @@ export function LiveIntelPanel({ status, news }: { status: LiveDataStatus; news:
         </div>
         <p className="mt-4 text-sm text-slate-300">{status.notes[0]}</p>
       </div>
-      <div className="rounded border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-wide text-pitch">News signals</p>
         <h2 className="mt-2 text-2xl font-black">Tracked Context</h2>
         <div className="mt-4 grid gap-3">
           {news.slice(0, 4).map((item) => (
-            <article key={item.id} className="border-l-4 border-pitch bg-slate-50 p-3">
+            <article key={item.id} className="rounded border border-slate-200 bg-slate-50 p-3">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="font-bold">{item.title}</h3>
                 <span className="rounded bg-white px-2 py-1 text-xs font-bold text-slate-600">{item.impact}</span>

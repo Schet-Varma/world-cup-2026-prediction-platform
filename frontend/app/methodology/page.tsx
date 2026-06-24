@@ -1,3 +1,5 @@
+import { WorldCupHero } from "@/components/WorldCupHero";
+
 const steps = [
   ["Dynamic Elo", "Ratings update from historical matches with competition weights and exponential recency decay."],
   ["Expected goals", "Attack, defense, Elo difference, and recent form create team-level xG estimates."],
@@ -9,17 +11,27 @@ const steps = [
 
 export default function MethodologyPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-black">Methodology</h1>
-        <p className="mt-2 max-w-3xl text-slate-600">The model favors transparency: every prediction can be traced back to team strength, form, scoring rates, and tournament-path simulation.</p>
-      </div>
+    <div className="space-y-8">
+      <WorldCupHero
+        eyebrow="Model room"
+        title="Transparent football forecasting, from Elo to odds edge."
+        description="Every prediction can be traced back to team strength, form, scoring rates, match simulation, market comparison, and live context."
+        compact
+        stats={[
+          { label: "Core", value: "Elo", detail: "strength baseline" },
+          { label: "Scoring", value: "Poisson", detail: "scoreline matrix" },
+          { label: "Output", value: "EV", detail: "market comparison" }
+        ]}
+      />
       <div className="grid gap-4 md:grid-cols-2">
         {steps.map(([title, body], index) => (
-          <article key={title} className="rounded border border-slate-200 bg-white p-5 shadow-sm">
-            <span className="flex h-9 w-9 items-center justify-center rounded bg-pitch font-bold text-white">{index + 1}</span>
+          <article key={title} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div className="h-1.5 bg-[linear-gradient(90deg,#0f5f4a,#d9f99d,#ff6b5f)]" />
+            <div className="p-5">
+            <span className="flex h-9 w-9 items-center justify-center rounded bg-ink font-bold text-mint">{index + 1}</span>
             <h2 className="mt-4 text-xl font-bold">{title}</h2>
             <p className="mt-2 text-slate-600">{body}</p>
+            </div>
           </article>
         ))}
       </div>

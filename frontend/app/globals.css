@@ -4,18 +4,26 @@
 
 :root {
   color-scheme: light;
-  background: #f5f7f8;
+  background: #eef4f2;
 }
 
 body {
   margin: 0;
   color: #101828;
   background:
-    linear-gradient(180deg, rgba(15, 95, 74, 0.12), rgba(245, 247, 248, 0) 260px),
-    #f5f7f8;
+    linear-gradient(180deg, rgba(6, 15, 30, 0.08), rgba(238, 244, 242, 0) 360px),
+    linear-gradient(90deg, rgba(15, 95, 74, 0.08) 0 1px, transparent 1px 96px),
+    linear-gradient(0deg, rgba(15, 95, 74, 0.06) 0 1px, transparent 1px 96px),
+    #eef4f2;
+  min-height: 100vh;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+::selection {
+  background: #d9f99d;
+  color: #101828;
 }

@@ -1,9 +1,10 @@
-import { Activity, ShieldAlert, Sparkles } from "lucide-react";
+import { Activity, ArrowRight, CircleDollarSign, ShieldAlert, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { BettingCard } from "@/components/BettingCard";
 import { LiveIntelPanel } from "@/components/LiveIntelPanel";
 import { PredictionTile } from "@/components/PredictionTile";
 import { TeamCard } from "@/components/TeamCard";
+import { WorldCupHero } from "@/components/WorldCupHero";
 import { getBettingRecommendations, getGroupPredictions, getLiveStatus, getNews, getSimulation } from "@/lib/api";
 
 export default async function HomePage() {
@@ -19,13 +20,34 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-8">
-      <section className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
-        <div className="rounded border border-slate-200 bg-white p-6 shadow-panel">
+      <WorldCupHero
+        eyebrow="Tournament intelligence room"
+        title="World Cup 2026 predictions with odds, news, flags, and fake bankroll discipline."
+        description={`Explainable champion probabilities from ${simulation.runs.toLocaleString()} simulations, group-stage practice picks, and a fake-money betting lab that shows its working.`}
+        actions={(
+          <>
+            <Link href="/bets" className="inline-flex h-11 items-center gap-2 rounded bg-mint px-4 text-sm font-black text-ink shadow-sm transition hover:bg-white">
+              Open Fake Bets <ArrowRight size={17} />
+            </Link>
+            <Link href="/group-stage" className="inline-flex h-11 items-center gap-2 rounded bg-white/10 px-4 text-sm font-black text-white ring-1 ring-white/20 transition hover:bg-white/20">
+              Group Predictions
+            </Link>
+          </>
+        )}
+        stats={[
+          { label: "Top champion", value: topTeams[0]?.team_name ?? "TBD", detail: `${((topTeams[0]?.champion_probability ?? 0) * 100).toFixed(1)}% title probability` },
+          { label: "Dark horses", value: String(darkHorses.length), detail: "teams over 3%" },
+          { label: "Model", value: "Elo + Poisson", detail: "with news and odds context" }
+        ]}
+      />
+
+      <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-panel">
           <div className="mb-6 flex items-center gap-3">
             <Sparkles className="text-coral" />
             <div>
-              <h1 className="text-3xl font-black">Knockout Prediction Dashboard</h1>
-              <p className="mt-1 text-slate-600">Explainable champion probabilities from {simulation.runs.toLocaleString()} simulations.</p>
+              <h2 className="text-2xl font-black">Knockout Prediction Dashboard</h2>
+              <p className="mt-1 text-slate-600">The model tracks contenders, value signals, and group-stage volatility before the bracket locks.</p>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -34,7 +56,8 @@ export default async function HomePage() {
             <Metric label="Model style" value="Hybrid" detail="Elo + Poisson" />
           </div>
         </div>
-        <div className="rounded border border-slate-200 bg-ink p-6 text-white shadow-panel">
+        <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-ink p-6 text-white shadow-panel">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-[linear-gradient(90deg,#ff6b5f,#d9f99d,#0f5f4a)]" aria-hidden="true" />
           <Activity className="mb-4 text-mint" />
           <h2 className="text-xl font-bold">Latest Simulation</h2>
           <p className="mt-2 text-sm text-slate-300">Monte Carlo paths resolve knockout draws with a strength-weighted penalty assumption.</p>
@@ -49,12 +72,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="rounded border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="h-1.5 bg-[linear-gradient(90deg,#0f5f4a,#d9f99d,#ff6b5f)]" />
+        <div className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-pitch">Fake bankroll lab</p>
-            <h2 className="mt-1 text-2xl font-black">$100 to $1,000 Knockout-Day Challenge</h2>
-            <p className="mt-1 text-sm text-slate-600">A fake-money page now tracks bet slips, risk, model thinking, and linked news context.</p>
+            <h2 className="mt-1 flex items-center gap-2 text-2xl font-black"><CircleDollarSign className="text-coral" /> $100 bankroll lab with safe singles and capped multis</h2>
+            <p className="mt-1 text-sm text-slate-600">Fake slips show risk, EV, reasoning, linked news context, and a Round of 32 reset plan.</p>
           </div>
           <Link href="/bets" className="inline-flex h-11 items-center justify-center rounded bg-pitch px-4 text-sm font-bold text-white hover:bg-emerald-800">
             Open Fake Bets
@@ -108,7 +132,7 @@ export default async function HomePage() {
 
 function Metric({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
-    <div className="border-l-4 border-pitch bg-slate-50 p-4">
+    <div className="rounded border border-slate-200 bg-slate-50 p-4">
       <p className="text-sm font-medium text-slate-500">{label}</p>
       <p className="mt-1 text-2xl font-black">{value}</p>
       <p className="text-sm text-slate-600">{detail}</p>
