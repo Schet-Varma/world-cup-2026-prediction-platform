@@ -5,10 +5,11 @@ from app.models.domain import (
     BankrollPoint,
     BetLeg,
     FakeBetSlip,
+    NewsItem,
     ResearchSource,
     StrategyStep,
 )
-from app.data.loaders import load_fixtures
+from app.data.loaders import load_group_fixtures
 from app.services.news import latest_news
 from app.services.odds import top_recommendations
 
@@ -140,15 +141,34 @@ def _research_sources() -> list[ResearchSource]:
     ]
 
 
+def _group_stage_news_context() -> list[NewsItem]:
+    group_team_ids = {fixture.home_team for fixture in load_group_fixtures()} | {
+        fixture.away_team for fixture in load_group_fixtures()
+    }
+    items = [
+        item
+        for item in latest_news(limit=8)
+        if not item.team_ids or any(team_id in group_team_ids for team_id in item.team_ids)
+    ]
+    return [
+        item.model_copy(
+            update={
+                "summary": item.summary.replace("multiple Round of 32 paths", "multiple group-table paths")
+            }
+        )
+        for item in items
+    ]
+
+
 def _plan() -> list[StrategyStep]:
     return [
         StrategyStep(
             title="Reality check",
-            detail="The $100 to $1,000 aim is a stretch target. Safe mode will not force bets just to make the math look exciting.",
+            detail="The $100 to $1,000 aim starts today on remaining group-stage games. Safe mode will not force bets just to make the math look exciting.",
         ),
         StrategyStep(
-            title="16-game screen",
-            detail="Scan the full Round of 32 slate, but only place fake bets that pass probability, odds-band, edge, and confidence filters.",
+            title="Remaining group screen",
+            detail="Scan only remaining group-stage fixtures and place fake bets that pass probability, odds-band, edge, and confidence filters.",
         ),
         StrategyStep(
             title="Markets",
@@ -156,7 +176,7 @@ def _plan() -> list[StrategyStep]:
         ),
         StrategyStep(
             title="Stake sizing",
-            detail="Use fractional Kelly as a ceiling, then cap each slip at $3-$6 and today’s total open risk below $28.",
+            detail="Use fractional Kelly as a ceiling, then cap each slip at $3-$6 and today’s total open risk at $28 or lower.",
         ),
         StrategyStep(
             title="News gate",
@@ -192,7 +212,7 @@ def _stake_for(rec, bankroll: float, remaining_budget: float) -> float:
 
 
 def build_bankroll_challenge() -> BankrollChallenge:
-    recommendations = top_recommendations(limit=80, stage="knockout")
+    recommendations = top_recommendations(limit=80, stage="group")
     safe_candidates = [rec for rec in recommendations if _is_safe_candidate(rec)]
     unsafe_candidates = [rec for rec in recommendations if _is_tempting_but_unsafe(rec)]
 
@@ -229,7 +249,7 @@ def build_bankroll_challenge() -> BankrollChallenge:
     if max_possible >= TARGET_BANKROLL:
         target_probability = min(0.08, sum(slip.model_probability for slip in slips) / max(len(slips), 1) * 0.08)
     target_assessment = (
-        "Safe mode cannot honestly project a high-probability 10x from one slate. The path is to compound small positive-EV fake bets from today through the knockout start, not to chase longshots."
+        "Safe mode starts on remaining group-stage games. It cannot honestly project a high-probability 10x from one card; the path is to compound small positive-EV fake bets across the group slate, not to chase longshots."
     )
 
     bankroll_timeline = [
@@ -269,11 +289,11 @@ def build_bankroll_challenge() -> BankrollChallenge:
 
     return BankrollChallenge(
         title="Safe $100 Practice Bankroll",
-        mode="fake-money safe growth lab",
+        mode="remaining group-stage fake-money lab",
         strategy_name="Safe Growth Mode",
         initial_bankroll=INITIAL_BANKROLL,
         target_bankroll=TARGET_BANKROLL,
-        slate_size=len(load_fixtures()),
+        slate_size=len(load_group_fixtures()),
         available_cash=round(available_cash, 2),
         open_risk=round(open_risk, 2),
         current_mark_to_model=round(INITIAL_BANKROLL + expected_profit, 2),
@@ -286,5 +306,5 @@ def build_bankroll_challenge() -> BankrollChallenge:
         slips=slips,
         watchlist=watchlist,
         bankroll_timeline=bankroll_timeline,
-        news_context=latest_news(limit=8),
+        news_context=_group_stage_news_context(),
     )

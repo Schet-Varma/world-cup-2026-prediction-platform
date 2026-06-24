@@ -4,7 +4,15 @@
     "source": "seed-odds",
     "last_update": "2026-06-24T00:00:00Z",
     "bookmakers": [
-      {"key":"draftkings","title":"DraftKings","last_update":"2026-06-24T00:00:00Z","markets":[{"key":"h2h","outcomes":[{"name":"Czechia","price":3.4,"implied_probability":0.294},{"name":"Draw","price":3.25,"implied_probability":0.308},{"name":"Mexico","price":2.18,"implied_probability":0.459}]},{"key":"totals","outcomes":[{"name":"Over 2.5","price":2.05,"implied_probability":0.488},{"name":"Under 2.5","price":1.78,"implied_probability":0.562}]},{"key":"btts","outcomes":[{"name":"Yes","price":1.9,"implied_probability":0.526},{"name":"No","price":1.88,"implied_probability":0.532}]}]}
+      {"key":"draftkings","title":"DraftKings","last_update":"2026-06-24T00:00:00Z","markets":[{"key":"h2h","outcomes":[{"name":"Czechia","price":3.4,"implied_probability":0.294},{"name":"Draw","price":3.25,"implied_probability":0.308},{"name":"Mexico","price":2.18,"implied_probability":0.459}]},{"key":"totals","outcomes":[{"name":"Over 2.5","price":2.05,"implied_probability":0.488},{"name":"Under 2.5","price":1.9,"implied_probability":0.526}]},{"key":"btts","outcomes":[{"name":"Yes","price":1.9,"implied_probability":0.526},{"name":"No","price":1.88,"implied_probability":0.532}]}]}
+    ]
+  },
+  {
+    "fixture_id": "grp-a-06",
+    "source": "seed-odds",
+    "last_update": "2026-06-24T00:00:00Z",
+    "bookmakers": [
+      {"key":"pinnacle","title":"Pinnacle","last_update":"2026-06-24T00:00:00Z","markets":[{"key":"h2h","outcomes":[{"name":"South Africa","price":4.0,"implied_probability":0.25},{"name":"Draw","price":3.35,"implied_probability":0.299},{"name":"South Korea","price":1.92,"implied_probability":0.521}]},{"key":"totals","outcomes":[{"name":"Over 2.5","price":2.18,"implied_probability":0.459},{"name":"Under 2.5","price":1.82,"implied_probability":0.549}]},{"key":"btts","outcomes":[{"name":"Yes","price":2.06,"implied_probability":0.485},{"name":"No","price":1.78,"implied_probability":0.562}]}]}
     ]
   },
   {
@@ -12,7 +20,15 @@
     "source": "seed-odds",
     "last_update": "2026-06-24T00:00:00Z",
     "bookmakers": [
-      {"key":"fanduel","title":"FanDuel","last_update":"2026-06-24T00:00:00Z","markets":[{"key":"h2h","outcomes":[{"name":"Switzerland","price":2.32,"implied_probability":0.431},{"name":"Draw","price":3.15,"implied_probability":0.317},{"name":"Canada","price":3.05,"implied_probability":0.328}]},{"key":"totals","outcomes":[{"name":"Over 2.5","price":2.12,"implied_probability":0.472},{"name":"Under 2.5","price":1.72,"implied_probability":0.581}]},{"key":"btts","outcomes":[{"name":"Yes","price":1.95,"implied_probability":0.513},{"name":"No","price":1.82,"implied_probability":0.549}]}]}
+      {"key":"fanduel","title":"FanDuel","last_update":"2026-06-24T00:00:00Z","markets":[{"key":"h2h","outcomes":[{"name":"Switzerland","price":2.32,"implied_probability":0.431},{"name":"Draw","price":3.15,"implied_probability":0.317},{"name":"Canada","price":3.05,"implied_probability":0.328}]},{"key":"totals","outcomes":[{"name":"Over 2.5","price":2.12,"implied_probability":0.472},{"name":"Under 2.5","price":1.9,"implied_probability":0.526}]},{"key":"btts","outcomes":[{"name":"Yes","price":1.95,"implied_probability":0.513},{"name":"No","price":1.82,"implied_probability":0.549}]}]}
+    ]
+  },
+  {
+    "fixture_id": "grp-b-06",
+    "source": "seed-odds",
+    "last_update": "2026-06-24T00:00:00Z",
+    "bookmakers": [
+      {"key":"draftkings","title":"DraftKings","last_update":"2026-06-24T00:00:00Z","markets":[{"key":"h2h","outcomes":[{"name":"Bosnia and Herzegovina","price":2.45,"implied_probability":0.408},{"name":"Draw","price":3.05,"implied_probability":0.328},{"name":"Qatar","price":3.15,"implied_probability":0.317}]},{"key":"totals","outcomes":[{"name":"Over 2.5","price":2.34,"implied_probability":0.427},{"name":"Under 2.5","price":1.75,"implied_probability":0.571}]},{"key":"btts","outcomes":[{"name":"Yes","price":2.12,"implied_probability":0.472},{"name":"No","price":1.74,"implied_probability":0.575}]}]}
     ]
   },
   {
@@ -29,6 +45,22 @@
     "last_update": "2026-06-24T00:00:00Z",
     "bookmakers": [
       {"key":"pointsbet","title":"PointsBet","last_update":"2026-06-24T00:00:00Z","markets":[{"key":"h2h","outcomes":[{"name":"Panama","price":7.25,"implied_probability":0.138},{"name":"Draw","price":4.35,"implied_probability":0.23},{"name":"England","price":1.46,"implied_probability":0.685}]},{"key":"totals","outcomes":[{"name":"Over 2.5","price":1.82,"implied_probability":0.549},{"name":"Under 2.5","price":2.0,"implied_probability":0.5}]},{"key":"btts","outcomes":[{"name":"Yes","price":2.12,"implied_probability":0.472},{"name":"No","price":1.72,"implied_probability":0.581}]}]}
+    ]
+  },
+  {
+    "fixture_id": "grp-c-06",
+    "source": "seed-odds",
+    "last_update": "2026-06-24T00:00:00Z",
+    "bookmakers": [
+      {"key":"fanduel","title":"FanDuel","last_update":"2026-06-24T00:00:00Z","markets":[{"key":"h2h","outcomes":[{"name":"Morocco","price":2.08,"implied_probability":0.481},{"name":"Draw","price":3.2,"implied_probability":0.313},{"name":"Haiti","price":3.75,"implied_probability":0.267}]},{"key":"totals","outcomes":[{"name":"Over 2.5","price":2.26,"implied_probability":0.442},{"name":"Under 2.5","price":1.82,"implied_probability":0.549}]},{"key":"btts","outcomes":[{"name":"Yes","price":2.08,"implied_probability":0.481},{"name":"No","price":1.78,"implied_probability":0.562}]}]}
+    ]
+  },
+  {
+    "fixture_id": "grp-l-06",
+    "source": "seed-odds",
+    "last_update": "2026-06-24T00:00:00Z",
+    "bookmakers": [
+      {"key":"betmgm","title":"BetMGM","last_update":"2026-06-24T00:00:00Z","markets":[{"key":"h2h","outcomes":[{"name":"Croatia","price":2.05,"implied_probability":0.488},{"name":"Draw","price":3.25,"implied_probability":0.308},{"name":"Ghana","price":3.75,"implied_probability":0.267}]},{"key":"totals","outcomes":[{"name":"Over 2.5","price":2.04,"implied_probability":0.49},{"name":"Under 2.5","price":1.94,"implied_probability":0.515}]},{"key":"btts","outcomes":[{"name":"Yes","price":1.9,"implied_probability":0.526},{"name":"No","price":1.92,"implied_probability":0.521}]}]}
     ]
   },
   {

@@ -1,4 +1,4 @@
-from app.data.loaders import load_fixtures
+from app.data.loaders import load_fixtures, load_group_fixtures
 from app.services.elo import expected_score, recency_weight
 from app.services.odds import top_recommendations
 from app.services.bankroll import build_bankroll_challenge
@@ -59,7 +59,7 @@ def test_bankroll_challenge_builds_fake_slips_and_timeline():
     challenge = build_bankroll_challenge()
     assert challenge.initial_bankroll == 100
     assert challenge.target_bankroll == 1000
-    assert challenge.slate_size == 16
+    assert challenge.slate_size == len(load_group_fixtures())
     assert challenge.slips
     assert challenge.watchlist
     assert challenge.bankroll_timeline
@@ -67,3 +67,5 @@ def test_bankroll_challenge_builds_fake_slips_and_timeline():
     assert all(slip.model_probability >= 0.525 for slip in challenge.slips)
     assert all(slip.stake > 0 for slip in challenge.slips)
     assert all(slip.stake == 0 for slip in challenge.watchlist)
+    assert all(slip.legs[0].fixture_id.startswith("grp-") for slip in challenge.slips)
+    assert all(slip.legs[0].fixture_id.startswith("grp-") for slip in challenge.watchlist)

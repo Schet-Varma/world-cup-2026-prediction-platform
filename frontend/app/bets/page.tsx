@@ -25,7 +25,7 @@ export default async function BetsPage() {
         <div className="rounded border border-slate-200 bg-ink p-6 text-white shadow-panel">
           <Target className="mb-4 text-mint" />
           <h2 className="text-2xl font-black">Live Bankroll Mark</h2>
-          <p className="mt-2 text-sm text-slate-300">Expected-value mark is not settled cash. It updates from the model and open fake slips.</p>
+          <p className="mt-2 text-sm text-slate-300">Expected-value mark is not settled cash. It updates from the remaining group-stage model and open fake slips.</p>
           <div className="mt-6 grid gap-3">
             <Line label="Available cash" value={`$${challenge.available_cash.toFixed(2)}`} />
             <Line label="Model EV bankroll" value={`$${challenge.current_mark_to_model.toFixed(2)}`} />
@@ -37,7 +37,7 @@ export default async function BetsPage() {
       <section>
         <div className="mb-4 flex items-center gap-2">
           <Brain className="text-pitch" size={22} />
-          <h2 className="text-2xl font-black">Strategy Plan</h2>
+          <h2 className="text-2xl font-black">Remaining Group Plan</h2>
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {challenge.plan.map((step, index) => (
@@ -53,15 +53,15 @@ export default async function BetsPage() {
       <section>
         <div className="mb-4">
           <h2 className="text-2xl font-black">Money Tracker</h2>
-          <p className="mt-1 text-sm text-slate-600">Track cash, open risk, model EV mark, and the stretch target separately.</p>
+          <p className="mt-1 text-sm text-slate-600">Track group-stage cash, open risk, model EV mark, and the stretch target separately.</p>
         </div>
         <BankrollTimeline points={challenge.bankroll_timeline} />
       </section>
 
       <section>
         <div className="mb-4">
-          <h2 className="text-2xl font-black">Rejected Edges</h2>
-          <p className="mt-1 text-sm text-slate-600">Tempting bets that were not placed because the hit rate, odds band, or variance profile failed Safe Growth Mode.</p>
+          <h2 className="text-2xl font-black">Rejected Group Edges</h2>
+          <p className="mt-1 text-sm text-slate-600">Tempting group-stage bets that were not placed because the hit rate, odds band, or variance profile failed Safe Growth Mode.</p>
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
           {watchlist.map((slip) => (
@@ -73,8 +73,8 @@ export default async function BetsPage() {
       <section>
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-black">Fake Bet Slips</h2>
-            <p className="mt-1 text-sm text-slate-600">These are simulated placements only. Nothing is sent to a sportsbook.</p>
+            <h2 className="text-2xl font-black">Fake Group Bet Slips</h2>
+            <p className="mt-1 text-sm text-slate-600">These are simulated placements on remaining group-stage games only. Nothing is sent to a sportsbook.</p>
           </div>
           <span className="rounded bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-coral">fake money</span>
         </div>
