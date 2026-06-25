@@ -55,6 +55,12 @@ def test_betting_recommendations_find_model_edges():
     assert 0 <= rows[0].model_probability <= 1
 
 
+def test_group_betting_recommendations_skip_completed_fixtures():
+    rows = top_recommendations(limit=20, stage="group")
+    assert rows
+    assert all(row.fixture_id in {"grp-l-05", "grp-l-06"} for row in rows)
+
+
 def test_bankroll_challenge_builds_fake_slips_and_timeline():
     challenge = build_bankroll_challenge()
     assert challenge.initial_bankroll == 100
@@ -64,6 +70,15 @@ def test_bankroll_challenge_builds_fake_slips_and_timeline():
     assert challenge.watchlist
     assert challenge.bankroll_timeline
     assert challenge.open_risk <= 28
+    assert challenge.open_risk <= 8
+    assert challenge.settled_bankroll < 100
+    assert challenge.settled_profit_loss < 0
+    assert challenge.lost_slips > challenge.won_slips
+    assert challenge.pending_slips >= 1
+    assert challenge.next_milestone <= challenge.max_possible_bankroll
+    assert "Recovery mode active" in challenge.strategy_shift
+    assert any(slip.status == "settled-lost" for slip in challenge.slips)
+    assert any(slip.status == "pending-live" for slip in challenge.slips)
     single_slips = [slip for slip in challenge.slips if len(slip.legs) == 1]
     multi_slips = [slip for slip in challenge.slips if len(slip.legs) > 1]
     assert single_slips

@@ -166,6 +166,8 @@ class BetLeg(BaseModel):
     model_probability: float
     market_probability: float
     edge: float
+    status: str = "pending"
+    result: str | None = None
 
 
 class FakeBetSlip(BaseModel):
@@ -181,6 +183,10 @@ class FakeBetSlip(BaseModel):
     potential_profit: float
     status: str
     placed_at: str
+    settled_at: str | None = None
+    actual_return: float = 0
+    profit_loss: float = 0
+    result_summary: str = ""
     rationale: list[str]
     legs: list[BetLeg]
 
@@ -214,11 +220,21 @@ class BankrollChallenge(BaseModel):
     initial_bankroll: float
     target_bankroll: float
     slate_size: int
+    settled_bankroll: float = 100
+    settled_profit_loss: float = 0
     available_cash: float
     open_risk: float
     current_mark_to_model: float
     max_possible_bankroll: float
     probability_to_target: float
+    next_milestone: float = 100
+    next_milestone_probability: float = 0
+    won_slips: int = 0
+    lost_slips: int = 0
+    pending_slips: int = 0
+    settled_slips: int = 0
+    strategy_shift: str = ""
+    last_settlement: str | None = None
     target_assessment: str
     risk_warning: str
     plan: list[StrategyStep]

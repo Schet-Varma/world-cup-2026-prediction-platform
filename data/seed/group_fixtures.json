@@ -1,10 +1,10 @@
 [
-  {"id":"grp-a-05","round":"Group A Matchday 3","stage":"group","group":"A","home_team":"cze","away_team":"mex","venue":"Estadio Azteca","kickoff_local":"2026-06-24T15:00:00-06:00","neutral":false,"status":"scheduled"},
-  {"id":"grp-a-06","round":"Group A Matchday 3","stage":"group","group":"A","home_team":"rsa","away_team":"kor","venue":"Monterrey Stadium","kickoff_local":"2026-06-24T15:00:00-06:00","neutral":true,"status":"scheduled"},
-  {"id":"grp-b-05","round":"Group B Matchday 3","stage":"group","group":"B","home_team":"sui","away_team":"can","venue":"BC Place","kickoff_local":"2026-06-24T18:00:00-07:00","neutral":false,"status":"scheduled"},
-  {"id":"grp-b-06","round":"Group B Matchday 3","stage":"group","group":"B","home_team":"bih","away_team":"qat","venue":"BMO Field","kickoff_local":"2026-06-24T18:00:00-04:00","neutral":true,"status":"scheduled"},
-  {"id":"grp-c-05","round":"Group C Matchday 3","stage":"group","group":"C","home_team":"sco","away_team":"bra","venue":"Hard Rock Stadium","kickoff_local":"2026-06-24T21:00:00-04:00","neutral":true,"status":"scheduled"},
-  {"id":"grp-c-06","round":"Group C Matchday 3","stage":"group","group":"C","home_team":"mar","away_team":"hai","venue":"NRG Stadium","kickoff_local":"2026-06-24T20:00:00-05:00","neutral":true,"status":"scheduled"},
+  {"id":"grp-a-05","round":"Group A Matchday 3","stage":"group","group":"A","home_team":"cze","away_team":"mex","venue":"Estadio Azteca","kickoff_local":"2026-06-24T15:00:00-06:00","neutral":false,"status":"completed","home_goals":0,"away_goals":3},
+  {"id":"grp-a-06","round":"Group A Matchday 3","stage":"group","group":"A","home_team":"rsa","away_team":"kor","venue":"Monterrey Stadium","kickoff_local":"2026-06-24T15:00:00-06:00","neutral":true,"status":"completed","home_goals":1,"away_goals":0},
+  {"id":"grp-b-05","round":"Group B Matchday 3","stage":"group","group":"B","home_team":"sui","away_team":"can","venue":"BC Place","kickoff_local":"2026-06-24T18:00:00-07:00","neutral":false,"status":"completed","home_goals":2,"away_goals":1},
+  {"id":"grp-b-06","round":"Group B Matchday 3","stage":"group","group":"B","home_team":"bih","away_team":"qat","venue":"BMO Field","kickoff_local":"2026-06-24T18:00:00-04:00","neutral":true,"status":"completed","home_goals":3,"away_goals":1},
+  {"id":"grp-c-05","round":"Group C Matchday 3","stage":"group","group":"C","home_team":"sco","away_team":"bra","venue":"Hard Rock Stadium","kickoff_local":"2026-06-24T21:00:00-04:00","neutral":true,"status":"completed","home_goals":0,"away_goals":3},
+  {"id":"grp-c-06","round":"Group C Matchday 3","stage":"group","group":"C","home_team":"mar","away_team":"hai","venue":"NRG Stadium","kickoff_local":"2026-06-24T20:00:00-05:00","neutral":true,"status":"completed","home_goals":4,"away_goals":2},
   {"id":"grp-l-05","round":"Group L Matchday 3","stage":"group","group":"L","home_team":"pan","away_team":"eng","venue":"MetLife Stadium","kickoff_local":"2026-06-27T17:00:00-04:00","neutral":true,"status":"scheduled"},
   {"id":"grp-l-06","round":"Group L Matchday 3","stage":"group","group":"L","home_team":"cro","away_team":"gha","venue":"Lincoln Financial Field","kickoff_local":"2026-06-27T17:00:00-04:00","neutral":true,"status":"scheduled"}
 ]

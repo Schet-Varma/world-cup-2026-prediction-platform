@@ -6,13 +6,14 @@ from app.models.domain import (
     BankrollPoint,
     BetLeg,
     FakeBetSlip,
+    Fixture,
     NewsItem,
     ResearchSource,
     StrategyStep,
 )
 from app.data.loaders import load_fixtures, load_group_fixtures
 from app.services.news import latest_news
-from app.services.odds import top_recommendations
+from app.services.odds import is_settled_fixture, top_recommendations
 
 
 INITIAL_BANKROLL = 100.0
@@ -20,6 +21,8 @@ TARGET_BANKROLL = 1000.0
 MAX_SAFE_EXPOSURE = 28.0
 MAX_MULTI_EXPOSURE = 6.0
 SINGLE_EXPOSURE_BUDGET = MAX_SAFE_EXPOSURE - MAX_MULTI_EXPOSURE
+RECOVERY_EXPOSURE_BUDGET = 8.0
+RECOVERY_SINGLE_MAX = 3.0
 MAX_SAFE_MULTIS = 3
 MAX_MULTI_LEGS = 2
 KNOCKOUT_INITIAL_BANKROLL = 100.0
@@ -48,11 +51,20 @@ def _leg_from_recommendation(item) -> BetLeg:
     )
 
 
-def _single_slip(index: int, rec, stake: float, status: str = "fake-open") -> FakeBetSlip:
+def _single_slip(
+    index: int,
+    rec,
+    stake: float,
+    *,
+    prefix: str = "live-single",
+    kind: str = "recovery single",
+    placed_at: str = "2026-06-25 recovery card",
+    status: str = "pending-live",
+) -> FakeBetSlip:
     potential_return = stake * rec.best_decimal_odds
     return FakeBetSlip(
-        id=f"fake-single-{index + 1}",
-        kind="single",
+        id=f"{prefix}-{index + 1}",
+        kind=kind,
         stake=round(stake, 2),
         decimal_odds=rec.best_decimal_odds,
         model_probability=rec.model_probability,
@@ -62,7 +74,7 @@ def _single_slip(index: int, rec, stake: float, status: str = "fake-open") -> Fa
         potential_return=round(potential_return, 2),
         potential_profit=round(potential_return - stake, 2),
         status=status,
-        placed_at="2026-06-24 practice card",
+        placed_at=placed_at,
         rationale=[
             "Safe mode only places higher-probability fake singles; longshots are screened out even when EV looks tempting.",
             f"Fractional Kelly raw size is {_fractional_kelly(rec.model_probability, rec.best_decimal_odds):.1%}; stake is capped below that for survival.",
@@ -85,12 +97,19 @@ def _combined_metrics(recs) -> tuple[float, float, float, float, float]:
     return decimal_odds, model_probability, market_probability, edge, expected_value
 
 
-def _multi_slip(index: int, recs, stake: float) -> FakeBetSlip:
+def _multi_slip(
+    index: int,
+    recs,
+    stake: float,
+    *,
+    prefix: str = "live-safe-multi",
+    placed_at: str = "2026-06-25 recovery card",
+) -> FakeBetSlip:
     decimal_odds, model_probability, market_probability, edge, expected_value = _combined_metrics(recs)
     potential_return = stake * decimal_odds
     leg_labels = "; ".join(f"{rec.selection} in {rec.fixture_label}" for rec in recs)
     return FakeBetSlip(
-        id=f"fake-safe-multi-{index + 1}",
+        id=f"{prefix}-{index + 1}",
         kind="safe multi",
         stake=round(stake, 2),
         decimal_odds=round(decimal_odds, 4),
@@ -100,8 +119,8 @@ def _multi_slip(index: int, recs, stake: float) -> FakeBetSlip:
         expected_value=round(expected_value, 6),
         potential_return=round(potential_return, 2),
         potential_profit=round(potential_return - stake, 2),
-        status="fake-open",
-        placed_at="2026-06-24 practice card",
+        status="pending-live",
+        placed_at=placed_at,
         rationale=[
             f"Two-leg multi only: {leg_labels}. No same-fixture stacking.",
             f"Combined model hit rate is {model_probability:.1%} versus market-implied {market_probability:.1%}; this is upside, not the core plan.",
@@ -134,8 +153,105 @@ def _watchlist_slip(index: int, rec, reason: str) -> FakeBetSlip:
     )
 
 
+def _fixture_result_label(fixture: Fixture) -> str:
+    if fixture.home_goals is None or fixture.away_goals is None:
+        return "awaiting result"
+    return f"{fixture.home_goals}-{fixture.away_goals}"
+
+
+def _leg_won(leg: BetLeg, fixture: Fixture) -> bool:
+    home_goals = fixture.home_goals or 0
+    away_goals = fixture.away_goals or 0
+    total_goals = home_goals + away_goals
+
+    if leg.market == "totals":
+        return (leg.selection == "Over 2.5" and total_goals > 2.5) or (
+            leg.selection == "Under 2.5" and total_goals < 2.5
+        )
+    if leg.market == "btts":
+        both_scored = home_goals > 0 and away_goals > 0
+        return (leg.selection == "Yes" and both_scored) or (leg.selection == "No" and not both_scored)
+    if leg.market == "h2h":
+        home_name, away_name = leg.fixture_label.split(" vs ")
+        if home_goals == away_goals:
+            result = "Draw"
+        elif home_goals > away_goals:
+            result = home_name
+        else:
+            result = away_name
+        return leg.selection == result
+    return False
+
+
+def _settle_leg(leg: BetLeg, fixtures_by_id: dict[str, Fixture]) -> BetLeg:
+    fixture = fixtures_by_id.get(leg.fixture_id)
+    if fixture is None or not is_settled_fixture(fixture):
+        return leg.model_copy(update={"status": "pending", "result": "awaiting final score"})
+
+    result_label = _fixture_result_label(fixture)
+    won = _leg_won(leg, fixture)
+    return leg.model_copy(
+        update={
+            "status": "won" if won else "lost",
+            "result": f"{result_label} final",
+        }
+    )
+
+
+def _settle_slip(slip: FakeBetSlip, fixtures_by_id: dict[str, Fixture]) -> FakeBetSlip:
+    graded_legs = [_settle_leg(leg, fixtures_by_id) for leg in slip.legs]
+    has_lost_leg = any(leg.status == "lost" for leg in graded_legs)
+    has_pending_leg = any(leg.status == "pending" for leg in graded_legs)
+    has_only_winning_legs = all(leg.status == "won" for leg in graded_legs)
+
+    if has_lost_leg:
+        status = "settled-lost"
+        actual_return = 0.0
+        profit_loss = -slip.stake
+        settled_at = "result sync"
+    elif has_only_winning_legs and not has_pending_leg:
+        status = "settled-won"
+        actual_return = slip.potential_return
+        profit_loss = slip.potential_profit
+        settled_at = "result sync"
+    else:
+        status = "pending-live"
+        actual_return = 0.0
+        profit_loss = 0.0
+        settled_at = None
+
+    result_summary = "; ".join(
+        f"{leg.fixture_label}: {leg.result or 'awaiting final score'} ({leg.status})" for leg in graded_legs
+    )
+
+    return slip.model_copy(
+        update={
+            "status": status,
+            "settled_at": settled_at,
+            "actual_return": round(actual_return, 2),
+            "profit_loss": round(profit_loss, 2),
+            "result_summary": result_summary,
+            "legs": graded_legs,
+        }
+    )
+
+
 def _research_sources() -> list[ResearchSource]:
     return [
+        ResearchSource(
+            title="Scotland 0-3 Brazil match report",
+            source="The Guardian",
+            url="https://www.theguardian.com/football/live/2026/jun/24/scotland-v-brazil-world-cup-2026-live",
+            category="result settlement",
+            summary="Final-score source used to grade the Scotland-Brazil BTTS leg as lost.",
+        ),
+        ResearchSource(
+            title="Morocco 4-2 Haiti match report",
+            source="The Guardian",
+            url="https://www.theguardian.com/football/live/2026/jun/24/morocco-v-haiti-world-cup-2026-live",
+            category="result settlement",
+            summary="Final-score source used to grade the Morocco-Haiti under-total leg as lost.",
+        ),
         ResearchSource(
             title="The Odds API V4 documentation",
             source="The Odds API",
@@ -210,20 +326,20 @@ def _group_stage_news_context() -> list[NewsItem]:
 def _plan() -> list[StrategyStep]:
     return [
         StrategyStep(
-            title="Reality check",
-            detail="The active ledger keeps running through the remaining group-stage games, but Safe Growth Mode will not force bets just to make the math look exciting.",
+            title="Settle first",
+            detail="Every refresh grades finished fake slips before placing anything new, so losses reduce cash immediately instead of staying as theoretical EV.",
+        ),
+        StrategyStep(
+            title="Recovery mode",
+            detail="Because the June 24 card missed badly, stake size drops to micro units and multis are paused until the settled hit rate improves.",
         ),
         StrategyStep(
             title="Remaining group screen",
-            detail="Scan only remaining group-stage fixtures and place fake bets that pass probability, odds-band, edge, and confidence filters.",
-        ),
-        StrategyStep(
-            title="Markets",
-            detail="Prefer lower-variance singles such as BTTS/totals or strong favorites. Add only tiny two-leg multis from already-safe legs.",
+            detail="Scan only unplayed group-stage fixtures and avoid draws, upset longshots, and thin edges that only look good because the price is huge.",
         ),
         StrategyStep(
             title="Stake sizing",
-            detail=f"Use fractional Kelly as a ceiling, cap singles at $3-$6, reserve no more than ${MAX_MULTI_EXPOSURE:.0f} for multis, and keep total open risk at ${MAX_SAFE_EXPOSURE:.0f} or lower.",
+            detail=f"Use fractional Kelly as a ceiling, cap recovery singles at ${RECOVERY_SINGLE_MAX:.0f}, keep total new open risk under ${RECOVERY_EXPOSURE_BUDGET:.0f}, and scale only after settled profit.",
         ),
         StrategyStep(
             title="News gate",
@@ -254,11 +370,33 @@ def _is_tempting_but_unsafe(rec) -> bool:
     return rec.expected_value > 0.05 and not _is_safe_candidate(rec)
 
 
+def _is_recovery_candidate(rec) -> bool:
+    if rec.selection == "Draw" or rec.best_decimal_odds > 2.1:
+        return False
+    if rec.market == "h2h":
+        return rec.model_probability >= 0.62 and 1.35 <= rec.best_decimal_odds <= 1.8 and rec.expected_value >= 0.025
+    if rec.market in {"totals", "btts"}:
+        return (
+            rec.model_probability >= 0.53
+            and 1.75 <= rec.best_decimal_odds <= 2.05
+            and rec.expected_value >= 0.025
+            and rec.confidence >= 0.74
+        )
+    return False
+
+
 def _stake_for(rec, bankroll: float, remaining_budget: float) -> float:
     kelly_dollars = bankroll * _fractional_kelly(rec.model_probability, rec.best_decimal_odds)
     confidence_multiplier = 1.0 if rec.confidence >= 0.78 else 0.75
     base_unit = 5.0 if rec.model_probability >= 0.55 or rec.edge >= 0.07 else 4.0
     stake = min(6.0, max(base_unit, kelly_dollars * confidence_multiplier), remaining_budget)
+    return round(max(stake, 0.0), 2)
+
+
+def _recovery_stake_for(rec, bankroll: float, remaining_budget: float) -> float:
+    kelly_dollars = bankroll * _fractional_kelly(rec.model_probability, rec.best_decimal_odds, fraction=0.1)
+    base_unit = 2.0
+    stake = min(RECOVERY_SINGLE_MAX, max(base_unit, kelly_dollars), remaining_budget)
     return round(max(stake, 0.0), 2)
 
 
@@ -305,9 +443,9 @@ def _phase_plan(group_ev_bankroll: float) -> list[BankrollPhase]:
             fixture_count=len(load_group_fixtures()),
             match_window="Remaining group-stage fixtures",
             reset_trigger="Settles when the final group-stage fixture in the seed slate is complete.",
-            exposure_policy=f"Keep open fake risk at ${MAX_SAFE_EXPOSURE:.0f} or lower, with at most ${MAX_MULTI_EXPOSURE:.0f} reserved for tiny two-leg multis.",
+            exposure_policy=f"Recovery mode keeps new open fake risk at ${RECOVERY_EXPOSURE_BUDGET:.0f} or lower and pauses new multis until the ledger repairs.",
             description=(
-                "Use this phase to test whether the model can make disciplined small-EV decisions before the bracket locks. "
+                "Use this phase to test whether the model can make disciplined small-EV decisions after real misses. "
                 f"The current model-EV mark is ${group_ev_bankroll:.2f}, but no group-stage result carries into the knockout reset."
             ),
             checkpoints=[
@@ -340,65 +478,168 @@ def _phase_plan(group_ev_bankroll: float) -> list[BankrollPhase]:
 
 
 def build_bankroll_challenge() -> BankrollChallenge:
-    recommendations = top_recommendations(limit=80, stage="group")
-    safe_candidates = [rec for rec in recommendations if _is_safe_candidate(rec)]
-    unsafe_candidates = [rec for rec in recommendations if _is_tempting_but_unsafe(rec)]
+    fixtures = load_group_fixtures()
+    fixtures_by_id = {fixture.id: fixture for fixture in fixtures}
+    settled_fixture_ids = {fixture.id for fixture in fixtures if is_settled_fixture(fixture)}
+    active_fixture_ids = {fixture.id for fixture in fixtures if fixture.id not in settled_fixture_ids}
+    recommendations = top_recommendations(limit=80, stage="group", include_completed=True)
+    completed_safe_candidates = [
+        rec for rec in recommendations if rec.fixture_id in settled_fixture_ids and _is_safe_candidate(rec)
+    ]
+    active_recommendations = [rec for rec in recommendations if rec.fixture_id in active_fixture_ids]
 
-    used_fixtures: set[str] = set()
-    slips: list[FakeBetSlip] = []
-    remaining_budget = SINGLE_EXPOSURE_BUDGET
-    single_recs = []
-    for rec in safe_candidates:
-        if rec.fixture_id in used_fixtures or remaining_budget < 3:
+    historical_slips: list[FakeBetSlip] = []
+    historical_single_recs = []
+    used_historical_fixtures: set[str] = set()
+    historical_budget = SINGLE_EXPOSURE_BUDGET
+    for rec in completed_safe_candidates:
+        if rec.fixture_id in used_historical_fixtures or historical_budget < 3:
             continue
-        stake = _stake_for(rec, INITIAL_BANKROLL, remaining_budget)
+        stake = _stake_for(rec, INITIAL_BANKROLL, historical_budget)
         if stake < 3:
             continue
-        slips.append(_single_slip(len(slips), rec, stake))
-        single_recs.append(rec)
-        used_fixtures.add(rec.fixture_id)
-        remaining_budget = round(remaining_budget - stake, 2)
-        if len(slips) >= 7:
+        slip = _single_slip(
+            len(historical_single_recs),
+            rec,
+            stake,
+            prefix="settled-single",
+            kind="settled single",
+            placed_at="2026-06-24 practice card",
+        )
+        historical_slips.append(_settle_slip(slip, fixtures_by_id))
+        historical_single_recs.append(rec)
+        used_historical_fixtures.add(rec.fixture_id)
+        historical_budget = round(historical_budget - stake, 2)
+        if len(historical_single_recs) >= 4:
             break
 
-    multi_budget = min(MAX_MULTI_EXPOSURE, MAX_SAFE_EXPOSURE - sum(slip.stake for slip in slips))
-    used_multi_fixtures: set[str] = set()
-    multi_count = 0
-    for _, expected_value, model_probability, _, pair in _multi_candidates(single_recs):
-        if multi_count >= MAX_SAFE_MULTIS or multi_budget < 2:
+    historical_multi_budget = min(MAX_MULTI_EXPOSURE, MAX_SAFE_EXPOSURE - sum(slip.stake for slip in historical_slips))
+    used_historical_multi_fixtures: set[str] = set()
+    historical_multi_count = 0
+    for _, expected_value, model_probability, _, pair in _multi_candidates(historical_single_recs):
+        if historical_multi_count >= 2 or historical_multi_budget < 2:
             break
         pair_fixture_ids = {rec.fixture_id for rec in pair}
-        if used_multi_fixtures & pair_fixture_ids:
+        if used_historical_multi_fixtures & pair_fixture_ids:
             continue
-        stake = _multi_stake_for(expected_value, model_probability, multi_budget)
+        stake = _multi_stake_for(expected_value, model_probability, historical_multi_budget)
         if stake < 2:
             continue
-        slips.append(_multi_slip(multi_count, pair, stake))
-        used_multi_fixtures |= pair_fixture_ids
-        multi_count += 1
-        multi_budget = round(multi_budget - stake, 2)
+        slip = _multi_slip(
+            historical_multi_count,
+            pair,
+            stake,
+            prefix="settled-safe-multi",
+            placed_at="2026-06-24 practice card",
+        )
+        historical_slips.append(_settle_slip(slip, fixtures_by_id))
+        used_historical_multi_fixtures |= pair_fixture_ids
+        historical_multi_count += 1
+        historical_multi_budget = round(historical_multi_budget - stake, 2)
+
+    settled_staked = sum(slip.stake for slip in historical_slips if slip.status.startswith("settled"))
+    settled_returns = sum(slip.actual_return for slip in historical_slips if slip.status.startswith("settled"))
+    settled_profit_loss = round(settled_returns - settled_staked, 2)
+    settled_bankroll = round(INITIAL_BANKROLL + settled_profit_loss, 2)
+    lost_slips = sum(1 for slip in historical_slips if slip.status == "settled-lost")
+    won_slips = sum(1 for slip in historical_slips if slip.status == "settled-won")
+    settled_slips = won_slips + lost_slips
+    recovery_mode = lost_slips > won_slips
+
+    active_safe_candidates = [
+        rec
+        for rec in active_recommendations
+        if (_is_recovery_candidate(rec) if recovery_mode else _is_safe_candidate(rec))
+    ]
+    unsafe_candidates = [rec for rec in active_recommendations if _is_tempting_but_unsafe(rec)]
+
+    new_slips: list[FakeBetSlip] = []
+    used_active_fixtures: set[str] = set()
+    remaining_budget = min(RECOVERY_EXPOSURE_BUDGET if recovery_mode else SINGLE_EXPOSURE_BUDGET, settled_bankroll)
+    active_single_recs = []
+    for rec in active_safe_candidates:
+        if rec.fixture_id in used_active_fixtures or remaining_budget < 2:
+            continue
+        stake = (
+            _recovery_stake_for(rec, settled_bankroll, remaining_budget)
+            if recovery_mode
+            else _stake_for(rec, settled_bankroll, remaining_budget)
+        )
+        if stake < 2:
+            continue
+        new_slips.append(_settle_slip(_single_slip(len(new_slips), rec, stake), fixtures_by_id))
+        active_single_recs.append(rec)
+        used_active_fixtures.add(rec.fixture_id)
+        remaining_budget = round(remaining_budget - stake, 2)
+        if len(new_slips) >= (2 if recovery_mode else 7):
+            break
+
+    if not recovery_mode:
+        multi_budget = min(MAX_MULTI_EXPOSURE, MAX_SAFE_EXPOSURE - sum(slip.stake for slip in new_slips))
+        used_multi_fixtures: set[str] = set()
+        multi_count = 0
+        for _, expected_value, model_probability, _, pair in _multi_candidates(active_single_recs):
+            if multi_count >= MAX_SAFE_MULTIS or multi_budget < 2:
+                break
+            pair_fixture_ids = {rec.fixture_id for rec in pair}
+            if used_multi_fixtures & pair_fixture_ids:
+                continue
+            stake = _multi_stake_for(expected_value, model_probability, multi_budget)
+            if stake < 2:
+                continue
+            new_slips.append(_settle_slip(_multi_slip(multi_count, pair, stake), fixtures_by_id))
+            used_multi_fixtures |= pair_fixture_ids
+            multi_count += 1
+            multi_budget = round(multi_budget - stake, 2)
+
+    slips = [*historical_slips, *new_slips]
 
     watchlist = []
     for rec in unsafe_candidates[:8]:
         if rec.model_probability < 0.5:
-            reason = "Rejected: low hit-rate upset or longshot profile does not fit Safe Growth Mode."
-        elif rec.best_decimal_odds > 2.35:
-            reason = "Rejected: odds are outside the safe band, so variance is too high for today."
+            reason = "Rejected: low hit-rate upset or longshot profile does not fit recovery mode."
+        elif rec.best_decimal_odds > 2.1:
+            reason = "Rejected: price is too lottery-like after the settled drawdown."
+        elif recovery_mode and rec.market == "h2h":
+            reason = "Rejected: match-result variance is too high until the ledger recovers."
         else:
-            reason = "Rejected: does not clear all safe-mode filters after confidence and market checks."
+            reason = "Rejected: does not clear the stricter post-loss probability, confidence, and odds-band filters."
         watchlist.append(_watchlist_slip(len(watchlist), rec, reason))
 
-    open_risk = sum(slip.stake for slip in slips)
-    available_cash = INITIAL_BANKROLL - open_risk
-    expected_profit = sum(slip.stake * slip.expected_value for slip in slips)
-    max_possible = available_cash + sum(slip.potential_return for slip in slips)
+    pending_slips = sum(1 for slip in slips if slip.status == "pending-live")
+    open_risk = sum(slip.stake for slip in slips if slip.status == "pending-live")
+    available_cash = settled_bankroll - open_risk
+    expected_profit = sum(slip.stake * slip.expected_value for slip in slips if slip.status == "pending-live")
+    max_possible = available_cash + sum(slip.potential_return for slip in slips if slip.status == "pending-live")
     target_probability = 0.0
     if max_possible >= TARGET_BANKROLL:
-        target_probability = min(0.08, sum(slip.model_probability for slip in slips) / max(len(slips), 1) * 0.08)
+        target_probability = min(
+            0.08,
+            sum(slip.model_probability for slip in slips if slip.status == "pending-live")
+            / max(pending_slips, 1)
+            * 0.08,
+        )
+
+    next_milestone = 90.0 if settled_bankroll < 90 else min(110.0, round(settled_bankroll + 10, 2))
+    if pending_slips and settled_bankroll < 90 <= next_milestone and max_possible < next_milestone:
+        next_milestone = round(max_possible, 2)
+    if max_possible + 0.005 >= next_milestone and pending_slips:
+        next_milestone_probability = min(
+            0.85,
+            sum(slip.model_probability for slip in slips if slip.status == "pending-live") / pending_slips,
+        )
+    else:
+        next_milestone_probability = 0.0
     target_assessment = (
-        "Safe mode keeps this group-stage run alive until groups end, then resets to $100 for Round of 32. The 10x push belongs to the longer knockout runway, not a rushed group-stage chase."
+        f"After settled June 24 losses, the real fake-cash base is ${settled_bankroll:.2f}. "
+        f"The live goal is recovery to ${next_milestone:.0f}; the $1000 chase stays parked for the Round of 32 reset."
     )
-    group_ev_bankroll = round(INITIAL_BANKROLL + expected_profit, 2)
+    strategy_shift = (
+        "Recovery mode active: tiny singles only, no new multis, no upset longshots, no chasing yesterday's losses."
+        if recovery_mode
+        else "Normal safe-growth mode active: singles first, tiny multis only after clean settled performance."
+    )
+    group_ev_bankroll = round(settled_bankroll + expected_profit, 2)
 
     bankroll_timeline = [
         BankrollPoint(
@@ -410,28 +651,36 @@ def build_bankroll_challenge() -> BankrollChallenge:
             note="Fake bankroll initialized.",
         ),
         BankrollPoint(
-            label="Today locked",
-            bankroll=INITIAL_BANKROLL,
+            label="June 24 settled",
+            bankroll=settled_bankroll,
+            available_cash=settled_bankroll,
+            open_risk=0,
+            potential_return=0,
+            note=f"Settled result sync: {won_slips} won, {lost_slips} lost, net P/L ${settled_profit_loss:.2f}.",
+        ),
+        BankrollPoint(
+            label="Live recovery card",
+            bankroll=settled_bankroll,
             available_cash=round(available_cash, 2),
             open_risk=round(open_risk, 2),
-            potential_return=round(sum(slip.potential_return for slip in slips), 2),
-            note="Safe singles plus tiny two-leg multis are fake-placed; rejected edges are visible below.",
+            potential_return=round(sum(slip.potential_return for slip in slips if slip.status == "pending-live"), 2),
+            note="Only remaining group-stage fixtures can receive new fake stake; multis are paused in recovery mode.",
         ),
         BankrollPoint(
             label="Model EV mark",
             bankroll=group_ev_bankroll,
             available_cash=round(available_cash, 2),
             open_risk=round(open_risk, 2),
-            potential_return=round(sum(slip.potential_return for slip in slips), 2),
-            note="Expected value mark after today’s conservative fake card, not settled cash.",
+            potential_return=round(sum(slip.potential_return for slip in slips if slip.status == "pending-live"), 2),
+            note="Expected-value mark after pending recovery slips, not settled cash.",
         ),
         BankrollPoint(
-            label="Group-stage close",
-            bankroll=group_ev_bankroll,
-            available_cash=group_ev_bankroll,
+            label="Next milestone",
+            bankroll=next_milestone,
+            available_cash=next_milestone,
             open_risk=0,
             potential_return=0,
-            note="Projected group-stage practice close after all open fake slips settle at model EV.",
+            note="Short-term recovery target before stake sizes are allowed to scale again.",
         ),
         BankrollPoint(
             label=ROUND_OF_32_RESET_LABEL,
@@ -459,11 +708,21 @@ def build_bankroll_challenge() -> BankrollChallenge:
         initial_bankroll=INITIAL_BANKROLL,
         target_bankroll=TARGET_BANKROLL,
         slate_size=len(load_group_fixtures()),
+        settled_bankroll=settled_bankroll,
+        settled_profit_loss=settled_profit_loss,
         available_cash=round(available_cash, 2),
         open_risk=round(open_risk, 2),
         current_mark_to_model=group_ev_bankroll,
         max_possible_bankroll=round(max_possible, 2),
         probability_to_target=target_probability,
+        next_milestone=next_milestone,
+        next_milestone_probability=next_milestone_probability,
+        won_slips=won_slips,
+        lost_slips=lost_slips,
+        pending_slips=pending_slips,
+        settled_slips=settled_slips,
+        strategy_shift=strategy_shift,
+        last_settlement="2026-06-25 result sync" if settled_slips else None,
         target_assessment=target_assessment,
         risk_warning="Fake money only. Safe mode prioritizes survival and disciplined compounding; it will hold cash rather than force risky bets.",
         plan=_plan(),

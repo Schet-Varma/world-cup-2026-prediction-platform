@@ -5,6 +5,17 @@ from app.models.domain import BettingRecommendation, Fixture, FixtureOdds
 from app.services.prediction import predict_match
 
 
+SETTLED_FIXTURE_STATUSES = {"completed", "finished", "final", "settled"}
+
+
+def is_settled_fixture(fixture: Fixture) -> bool:
+    return (
+        fixture.status.lower() in SETTLED_FIXTURE_STATUSES
+        and fixture.home_goals is not None
+        and fixture.away_goals is not None
+    )
+
+
 def decimal_to_implied_probability(decimal_odds: float) -> float:
     if decimal_odds <= 1:
         return 1.0
@@ -50,7 +61,9 @@ def _risk_label(edge: float, confidence: float) -> str:
     return "thin edge"
 
 
-def recommendations_for_fixture(fixture: Fixture) -> list[BettingRecommendation]:
+def recommendations_for_fixture(fixture: Fixture, include_completed: bool = False) -> list[BettingRecommendation]:
+    if is_settled_fixture(fixture) and not include_completed:
+        return []
     odds = load_fixture_odds().get(fixture.id)
     if odds is None:
         return []
@@ -93,12 +106,12 @@ def recommendations_for_fixture(fixture: Fixture) -> list[BettingRecommendation]
     return rows
 
 
-def top_recommendations(limit: int = 12, stage: str | None = None) -> list[BettingRecommendation]:
+def top_recommendations(limit: int = 12, stage: str | None = None, include_completed: bool = False) -> list[BettingRecommendation]:
     fixtures = load_all_fixtures()
     if stage:
         fixtures = [fixture for fixture in fixtures if fixture.stage == stage]
     rows: list[BettingRecommendation] = []
     for fixture in fixtures:
-        rows.extend(recommendations_for_fixture(fixture))
+        rows.extend(recommendations_for_fixture(fixture, include_completed=include_completed))
     rows.sort(key=lambda item: (item.expected_value, item.edge, item.confidence), reverse=True)
     return rows[:limit]

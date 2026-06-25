@@ -127,6 +127,8 @@ export type BetLeg = {
   model_probability: number;
   market_probability: number;
   edge: number;
+  status?: string;
+  result?: string | null;
 };
 
 export type FakeBetSlip = {
@@ -142,6 +144,10 @@ export type FakeBetSlip = {
   potential_profit: number;
   status: string;
   placed_at: string;
+  settled_at?: string | null;
+  actual_return?: number;
+  profit_loss?: number;
+  result_summary?: string;
   rationale: string[];
   legs: BetLeg[];
 };
@@ -175,11 +181,21 @@ export type BankrollChallenge = {
   initial_bankroll: number;
   target_bankroll: number;
   slate_size: number;
+  settled_bankroll?: number;
+  settled_profit_loss?: number;
   available_cash: number;
   open_risk: number;
   current_mark_to_model: number;
   max_possible_bankroll: number;
   probability_to_target: number;
+  next_milestone?: number;
+  next_milestone_probability?: number;
+  won_slips?: number;
+  lost_slips?: number;
+  pending_slips?: number;
+  settled_slips?: number;
+  strategy_shift?: string;
+  last_settlement?: string | null;
   target_assessment: string;
   risk_warning: string;
   plan: StrategyStep[];
